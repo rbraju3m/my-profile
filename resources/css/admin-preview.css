@@ -1,0 +1,64 @@
+/*
+ * The admin's live diagram preview renders the public site's FlowDiagram, which
+ * is styled with Tailwind. This pulls in Tailwind's theme and utilities only
+ * (no preflight reset, which would fight Mantine), plus the site's design
+ * tokens scoped to `.site-preview`.
+ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@source '../js/site/components/diagrams';
+
+.site-preview {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --surface-2: #f4f4f5;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --text: #0b0d10;
+    --muted: #5b616b;
+    --accent: #0f766e;
+    --live: #15803d;
+    --built: #1d4ed8;
+    --in-development: #b45309;
+    --research: #6d28d9;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+}
+
+[data-mantine-color-scheme='dark'] .site-preview {
+    --bg: #0a0b0d;
+    --surface: #111317;
+    --surface-2: #171a1f;
+    --border: #23272e;
+    --border-strong: #2f343c;
+    --text: #edeef0;
+    --muted: #9ba1a9;
+    --accent: #5eead4;
+    --live: #4ade80;
+    --built: #60a5fa;
+    --in-development: #fbbf24;
+    --research: #c4b5fd;
+}
+
+@theme inline {
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-border: var(--border);
+    --color-border-strong: var(--border-strong);
+    --color-text: var(--text);
+    --color-muted: var(--muted);
+    --color-accent: var(--accent);
+    --color-live: var(--live);
+    --color-built: var(--built);
+    --color-in-development: var(--in-development);
+    --color-research: var(--research);
+}
+
+@keyframes flow-dash {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
