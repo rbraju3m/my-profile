@@ -15,6 +15,7 @@ use App\Services\Settings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 /**
  * Loads the verified content from database/seeders/data/portfolio.php.
@@ -27,6 +28,13 @@ final class PortfolioSeeder extends Seeder
 {
     public function run(Settings $settings): void
     {
+        // It upserts, so re-running it would silently overwrite everything edited in the admin.
+        // The override is a one-off shell variable (read with getenv, so it works with cached config):
+        //   PORTFOLIO_SEED_OVERWRITE=1 php artisan db:seed --class=PortfolioSeeder --force
+        if (app()->isProduction() && Project::query()->exists() && getenv('PORTFOLIO_SEED_OVERWRITE') !== '1') {
+            throw new RuntimeException('The site already has content. Re-seeding would overwrite admin edits; run with PORTFOLIO_SEED_OVERWRITE=1 to do it anyway.');
+        }
+
         /** @var array<string, mixed> $data */
         $data = require __DIR__.'/data/portfolio.php';
 

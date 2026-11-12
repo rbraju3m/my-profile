@@ -21,6 +21,35 @@ jobs:
       - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
       - run: vendor/bin/pest
 
+  mysql:
+    # Production runs MySQL 8; the main suite runs on SQLite. Same tests, real engine.
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: portfolio_test
+          MYSQL_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, pdo_mysql, gd, zip, bcmath
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      - run: vendor/bin/pest
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: portfolio_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+
   frontend:
     runs-on: ubuntu-24.04
     steps:
@@ -36,6 +65,8 @@ jobs:
       - run: npm run build
       - name: No test code in production bundles
         run: '! grep -rlE "vitest|@testing-library" public/build bootstrap/ssr'
+      - name: SSR bundle is self-contained (production deletes node_modules)
+        run: '! grep -qE "from \"(react|react-dom|@inertiajs|es-toolkit)" bootstrap/ssr/ssr.js'
 
   browser:
     # Playwright (Chromium, Firefox, WebKit at three sizes, light and dark, with axe)
