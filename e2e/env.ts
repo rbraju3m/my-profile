@@ -20,6 +20,8 @@ export const appEnv: Record<string, string> = {
     QUEUE_CONNECTION: 'sync',
     MAIL_MAILER: 'array',
     RESPONSE_CACHE_ENABLED: 'true',
+    // Its own page-cache folder: sharing the dev site's would serve test pages (with test URLs) on the dev site.
+    CACHE_FILE_PATH: `${process.cwd()}/storage/framework/cache/e2e`,
     ADMIN_REQUIRE_2FA: 'false',
     ADMIN_EMAIL: ADMIN.email,
     ADMIN_PASSWORD: ADMIN.password,

@@ -49,7 +49,9 @@ return [
 
         'file' => [
             'driver' => 'file',
-            'path' => storage_path('framework/cache/data'),
+            // Overridden by scripts/e2e-server.sh so the test server's page cache
+            // (spatie/laravel-responsecache uses this store) never mixes with the local site's.
+            'path' => env('CACHE_FILE_PATH', storage_path('framework/cache/data')),
             'lock_path' => storage_path('framework/cache/locks'),
         ],
 
