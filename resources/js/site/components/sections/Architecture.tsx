@@ -1,6 +1,7 @@
+import { usePage } from '@inertiajs/react';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 
-import type { Diagram, SectionCopy } from '@/shared/types';
+import type { Diagram, SectionCopy, SharedProps } from '@/shared/types';
 
 import { cn } from '../../lib/cn';
 import { FlowDiagram } from '../diagrams/FlowDiagram';
@@ -9,6 +10,7 @@ import { Section } from '../ui/Section';
 
 /** Diagram showcase as an accessible tab list (arrow keys move between tabs). */
 export function Architecture({ copy, diagrams }: { copy: SectionCopy; diagrams: Diagram[] }) {
+    const { labels } = usePage<SharedProps>().props;
     const [index, setIndex] = useState(0);
     const uid = useId();
     const tabs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -70,7 +72,7 @@ export function Architecture({ copy, diagrams }: { copy: SectionCopy; diagrams: 
                     tabIndex={0}
                     className="mt-6 rounded-2xl border border-border bg-surface/50 p-4 sm:p-8"
                 >
-                    <FlowDiagram key={active.slug} diagram={active} />
+                    <FlowDiagram key={active.slug} diagram={active} labels={labels.diagram} />
                 </div>
             </Reveal>
         </Section>

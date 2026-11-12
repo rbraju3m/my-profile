@@ -16,7 +16,8 @@ import { Turnstile } from './Turnstile';
 type Fields = ContactFields & { website: string; 'cf-turnstile-response': string };
 
 export function Contact({ copy }: { copy: SectionCopy }) {
-    const { site, flash, turnstileSiteKey } = usePage<SharedProps & { turnstileSiteKey: string | null }>().props;
+    const { site, flash, turnstileSiteKey, labels } = usePage<SharedProps & { turnstileSiteKey: string | null }>().props;
+    const t = labels.contact;
     const [attempt, setAttempt] = useState(0);
     const email = useDecoded(site.contact.email);
     const phone = useDecoded(site.contact.phone);
@@ -40,7 +41,7 @@ export function Contact({ copy }: { copy: SectionCopy }) {
         }
 
         if (turnstileSiteKey && !form.data['cf-turnstile-response']) {
-            form.setError('form' as keyof Fields, 'Please complete the check above the Send button.');
+            form.setError('form' as keyof Fields, t.verify);
             return;
         }
 
@@ -62,15 +63,15 @@ export function Contact({ copy }: { copy: SectionCopy }) {
             <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
                 <Reveal>
                     <ul className="space-y-3">
-                        <ContactRow icon={<Mail className="size-4" />} label="Email" value={email} href={email ? `mailto:${email}` : undefined} />
-                        <ContactRow icon={<Phone className="size-4" />} label="Phone" value={phone} href={phone ? `tel:${phone}` : undefined} />
+                        <ContactRow icon={<Mail className="size-4" />} label={t.email} value={email} href={email ? `mailto:${email}` : undefined} />
+                        <ContactRow icon={<Phone className="size-4" />} label={t.phone} value={phone} href={phone ? `tel:${phone}` : undefined} />
                         <ContactRow
                             icon={<MessageCircle className="size-4" />}
-                            label="WhatsApp"
+                            label={t.whatsapp}
                             value={whatsapp ? `+${whatsapp}` : null}
                             href={whatsapp ? `https://wa.me/${whatsapp}` : undefined}
                         />
-                        {site.location && <ContactRow icon={<MapPin className="size-4" />} label="Location" value={site.location} />}
+                        {site.location && <ContactRow icon={<MapPin className="size-4" />} label={t.location} value={site.location} />}
                     </ul>
                     <ul className="mt-6 flex gap-2">
                         {site.socials.map((s) => (
@@ -95,7 +96,7 @@ export function Contact({ copy }: { copy: SectionCopy }) {
                             <CheckCircle2 className="size-8 text-live" aria-hidden="true" />
                             <p className="text-lg font-medium">{flash.success}</p>
                             <Button variant="secondary" onClick={() => setDismissed(true)}>
-                                Send another message
+                                {t.send_another}
                             </Button>
                         </div>
                     ) : (
@@ -106,7 +107,7 @@ export function Contact({ copy }: { copy: SectionCopy }) {
                                 </p>
                             )}
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <Field id="name" label="Name" error={errors.name}>
+                                <Field id="name" label={t.name} error={errors.name}>
                                     <input
                                         id="contact-name"
                                         autoComplete="name"
@@ -115,7 +116,7 @@ export function Contact({ copy }: { copy: SectionCopy }) {
                                         {...fieldProps('name', errors.name)}
                                     />
                                 </Field>
-                                <Field id="email" label="Email" error={errors.email}>
+                                <Field id="email" label={t.form_email} error={errors.email}>
                                     <input
                                         id="contact-email"
                                         type="email"
@@ -126,7 +127,7 @@ export function Contact({ copy }: { copy: SectionCopy }) {
                                     />
                                 </Field>
                             </div>
-                            <Field id="subject" label="Subject" error={errors.subject}>
+                            <Field id="subject" label={t.subject} error={errors.subject}>
                                 <input
                                     id="contact-subject"
                                     value={form.data.subject}
@@ -134,7 +135,7 @@ export function Contact({ copy }: { copy: SectionCopy }) {
                                     {...fieldProps('subject', errors.subject)}
                                 />
                             </Field>
-                            <Field id="message" label="Message" error={errors.message}>
+                            <Field id="message" label={t.message} error={errors.message}>
                                 <textarea
                                     id="contact-message"
                                     rows={6}
@@ -162,10 +163,10 @@ export function Contact({ copy }: { copy: SectionCopy }) {
                             )}
 
                             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                                <p className="text-xs text-muted">All fields are required.</p>
+                                <p className="text-xs text-muted">{t.required}</p>
                                 <Button type="submit" disabled={form.processing}>
                                     <Send className="size-4" aria-hidden="true" />
-                                    {form.processing ? 'Sending…' : 'Send message'}
+                                    {form.processing ? t.sending : t.send}
                                 </Button>
                             </div>
                         </form>

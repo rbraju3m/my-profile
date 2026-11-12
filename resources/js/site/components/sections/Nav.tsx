@@ -1,19 +1,18 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, Moon, Sun, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { SharedProps } from '@/shared/types';
 
 import { cn } from '../../lib/cn';
 import { useActiveSection } from '../../lib/useActiveSection';
-import { useTheme } from '../../lib/useTheme';
 import { Container } from '../ui/Container';
+import { ThemeGrid, ThemePicker } from './ThemePicker';
 
 export function Nav({ onHome }: { onHome: boolean }) {
-    const { site, nav } = usePage<SharedProps>().props;
+    const { site, nav, labels } = usePage<SharedProps>().props;
     const [open, setOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
-    const [theme, toggleTheme] = useTheme();
     const active = useActiveSection(onHome ? nav.map((item) => item.href.replace('#', '')) : []);
 
     useEffect(() => {
@@ -43,9 +42,19 @@ export function Nav({ onHome }: { onHome: boolean }) {
         >
             <Container className="flex h-16 items-center justify-between gap-4">
                 <Link href="/" className="group flex items-center gap-2.5 rounded-md">
-                    <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg border border-border bg-surface font-mono text-xs font-bold text-accent transition-colors group-hover:border-accent">
-                        {initials(site.name)}
-                    </span>
+                    {site.photo ? (
+                        <img
+                            src={site.photo.avatar}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="size-8 rounded-full border border-border object-cover transition-[border-color,scale] duration-300 group-hover:scale-110 group-hover:border-accent motion-reduce:group-hover:scale-100"
+                        />
+                    ) : (
+                        <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg border border-border bg-surface font-mono text-xs font-bold text-accent transition-colors group-hover:border-accent">
+                            {initials(site.name)}
+                        </span>
+                    )}
                     {/* The accessible name starts with the visible text (WCAG 2.5.3). */}
                     <span className="sr-only text-sm font-semibold sm:not-sr-only">{site.name}</span>
                     <span className="sr-only">, home</span>
@@ -82,23 +91,14 @@ export function Nav({ onHome }: { onHome: boolean }) {
                 </nav>
 
                 <div className="flex items-center gap-1">
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className="grid size-11 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text"
-                        aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                    >
-                        {/* Both icons render on the server; CSS shows the right one before hydration. */}
-                        <Sun className="hidden size-[18px] dark:block" aria-hidden="true" />
-                        <Moon className="size-[18px] dark:hidden" aria-hidden="true" />
-                    </button>
+                    <ThemePicker />
                     <button
                         type="button"
                         onClick={() => setOpen((v) => !v)}
                         className="grid size-11 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-text md:hidden"
                         aria-expanded={open}
                         aria-controls="mobile-menu"
-                        aria-label={open ? 'Close menu' : 'Open menu'}
+                        aria-label={open ? labels.common.close_menu : labels.common.open_menu}
                     >
                         {open ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
                     </button>
@@ -132,20 +132,22 @@ export function Nav({ onHome }: { onHome: boolean }) {
                             download
                             className="mt-6 flex min-h-12 items-center justify-center rounded-lg border border-border text-sm font-medium"
                         >
-                            Download CV
+                            {labels.common.download_cv}
                         </a>
                     )}
+                    <div className="mt-8 border-t border-border pt-6">
+                        <ThemeGrid />
+                    </div>
                 </Container>
             </div>
         </header>
     );
 }
 
-function initials(name: string): string {
-    return name
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join('');
+/** "Md. Rashedul Bari Raju" → "RR": first and last name, skipping abbreviations like "Md.". */
+export function initials(name: string): string {
+    const parts = name.split(/\s+/).filter((part) => part !== '' && !part.endsWith('.'));
+    const picked = parts.length > 1 ? [parts[0], parts[parts.length - 1]] : parts;
+
+    return picked.map((part) => part?.[0]?.toUpperCase() ?? '').join('');
 }

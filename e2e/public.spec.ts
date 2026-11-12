@@ -1,4 +1,4 @@
-import { a11yViolations, expect, hasHorizontalOverflow, isMobile, test, THEMES, visit } from './fixtures';
+import { a11yViolations, ALL_THEMES, expect, hasHorizontalOverflow, isMobile, test, THEMES, visit } from './fixtures';
 
 const PAGES = [
     { path: '/', heading: 'Building scalable software for real-world problems.' },
@@ -16,6 +16,9 @@ for (const theme of THEMES) {
 
                 await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
                 expect(await hasHorizontalOverflow(page), 'sideways scrolling').toBe(false);
+                // Content clipped by an overflow-hidden section doesn't scroll sideways, so check the heading fits too.
+                const box = await page.getByRole('heading', { level: 1 }).boundingBox();
+                expect((box?.x ?? 0) + (box?.width ?? 0), 'heading fits the screen').toBeLessThanOrEqual(page.viewportSize()!.width);
                 expect(await a11yViolations(page)).toEqual([]);
             });
         }
@@ -49,15 +52,66 @@ test('contact details are decoded in the browser but absent from the HTML', asyn
     await expect(page.getByRole('link', { name: /rbraju3m@gmail\.com/ })).toHaveAttribute('href', 'mailto:rbraju3m@gmail.com');
 });
 
-test('the theme toggle switches theme and remembers it', async ({ page }) => {
-    await visit(page, '/', 'light');
+for (const theme of ALL_THEMES.filter((t) => !THEMES.includes(t))) {
+    test(`the ${theme} theme passes axe (contrast included)`, async ({ page }) => {
+        await visit(page, '/', theme);
+        // Below-the-fold sections hydrate as they near the viewport; bring them all in.
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        await page.evaluate(() => window.scrollTo(0, 0));
+        expect(await a11yViolations(page)).toEqual([]);
+    });
+}
 
-    await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+test('a first visit gets the dark theme, whatever the device prefers', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.locator('html')).toHaveClass(/\bdark\b/);
+});
+
+test('the theme picker switches theme and remembers it', async ({ page }) => {
+    test.skip(isMobile(page), 'the header picker; phones also get it in the menu');
+    await visit(page, '/', 'dark');
+
+    const picker = page.getByRole('button', { name: 'Theme', exact: true });
+    await picker.click();
+    await page.getByRole('button', { name: 'Midnight' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'midnight');
+    await expect(picker).toBeFocused();
 
     await page.reload();
-    await expect(page.locator('html')).toHaveClass(/\bdark\b/);
-    await expect(page.getByRole('button', { name: 'Switch to light theme' })).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'midnight');
+
+    await picker.click();
+    await page.getByRole('button', { name: 'Paper' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'paper');
+    await expect(page.locator('html')).not.toHaveClass(/\bdark\b/);
+});
+
+test('the theme picker closes with Escape and on a click outside', async ({ page }) => {
+    test.skip(isMobile(page), 'desktop header');
+    await visit(page, '/');
+
+    const picker = page.getByRole('button', { name: 'Theme', exact: true });
+    await picker.click();
+    await expect(page.getByRole('button', { name: 'Aurora' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Aurora' })).toBeHidden();
+    await expect(picker).toBeFocused();
+
+    await picker.click();
+    await page.locator('h1').click();
+    await expect(page.getByRole('button', { name: 'Aurora' })).toBeHidden();
+});
+
+test('on phones the menu offers the themes too', async ({ page }) => {
+    test.skip(!isMobile(page), 'phones only');
+    await visit(page, '/');
+
+    await page.getByRole('button', { name: 'Open menu' }).click();
+    await page.locator('#mobile-menu').getByRole('button', { name: 'Ember' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'ember');
+    await expect(page.locator('#mobile-menu').getByRole('button', { name: 'Ember' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('the mobile menu opens, navigates and closes with Escape', async ({ page }) => {

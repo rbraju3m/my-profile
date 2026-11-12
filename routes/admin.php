@@ -34,8 +34,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', FlushPublicCache::cl
 
         Route::get('settings/{group}', [SettingsController::class, 'edit'])->whereIn('group', SettingsSchema::GROUPS)->name('settings.edit');
         Route::put('settings/{group}', [SettingsController::class, 'update'])->whereIn('group', SettingsSchema::GROUPS)->name('settings.update');
-        Route::post('files/{file}', [SettingsFileController::class, 'store'])->whereIn('file', ['cv', 'og_image'])->name('files.store');
-        Route::delete('files/{file}', [SettingsFileController::class, 'destroy'])->whereIn('file', ['cv', 'og_image'])->name('files.destroy');
+        Route::post('files/{file}', [SettingsFileController::class, 'store'])->whereIn('file', ['cv', 'photo', 'og_image'])->name('files.store');
+        Route::delete('files/{file}', [SettingsFileController::class, 'destroy'])->whereIn('file', ['cv', 'photo', 'og_image'])->name('files.destroy');
 
         Route::resource('projects', ProjectController::class)->except('show');
         Route::post('projects/{project}/media', [ProjectMediaController::class, 'store'])->name('projects.media.store');

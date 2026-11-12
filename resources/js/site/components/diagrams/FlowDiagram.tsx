@@ -1,18 +1,22 @@
 import { ArrowRight } from 'lucide-react';
 import { useId } from 'react';
 
-import type { Diagram, DiagramEdge, DiagramNode } from '@/shared/types';
+import type { Diagram, DiagramEdge, DiagramNode, Labels } from '@/shared/types';
 
 import { cn } from '../../lib/cn';
 import { layoutDiagram, NODE_H, NODE_W } from './layout';
 
-const typeLabel: Record<DiagramNode['type'], string> = {
+type DiagramLabels = Labels['diagram'];
+
+/** Used where the site's labels are not shared (the admin's live preview). */
+const DEFAULT_LABELS: DiagramLabels = {
     device: 'Device',
     service: 'Service',
     queue: 'Queue',
     storage: 'Storage',
     user: 'People',
     external: 'External',
+    async: '(asynchronous)',
 };
 
 const typeTone: Record<DiagramNode['type'], string> = {
@@ -29,7 +33,7 @@ const typeTone: Record<DiagramNode['type'], string> = {
  * between them). Wide screens get SVG; narrow screens get the same content as
  * an ordered step list, which is also what screen readers read.
  */
-export function FlowDiagram({ diagram, className }: { diagram: Diagram; className?: string }) {
+export function FlowDiagram({ diagram, className, labels = DEFAULT_LABELS }: { diagram: Diagram; className?: string; labels?: DiagramLabels }) {
     const uid = useId().replace(/:/g, '');
     const layout = layoutDiagram(diagram);
     const titleId = `${uid}-title`;
@@ -87,7 +91,7 @@ export function FlowDiagram({ diagram, className }: { diagram: Diagram; classNam
                             <div className="flex h-full flex-col justify-center rounded-xl border border-border bg-surface px-3 py-2 shadow-[0_1px_0_0_var(--border)]">
                                 <div className="flex items-center gap-1.5 font-mono text-[9px] tracking-wider text-muted uppercase">
                                     <span className={cn('size-1.5 rounded-full', typeTone[node.type])} />
-                                    {typeLabel[node.type]}
+                                    {labels[node.type]}
                                 </div>
                                 <div className="mt-0.5 truncate text-[13px] leading-tight font-semibold text-text">{node.label}</div>
                                 {node.sublabel && <div className="mt-0.5 line-clamp-2 text-[10.5px] leading-snug text-muted">{node.sublabel}</div>}
@@ -97,7 +101,7 @@ export function FlowDiagram({ diagram, className }: { diagram: Diagram; classNam
                 </svg>
             </div>
 
-            <StepList diagram={diagram} className="lg:hidden" />
+            <StepList diagram={diagram} className="lg:hidden" labels={labels} />
 
             {diagram.description && <figcaption className="mt-4 max-w-3xl text-sm text-pretty text-muted">{diagram.description}</figcaption>}
         </figure>
@@ -105,7 +109,7 @@ export function FlowDiagram({ diagram, className }: { diagram: Diagram; classNam
 }
 
 /** The narrow-screen version: nodes in reading order with their outgoing edges. */
-function StepList({ diagram, className }: { diagram: Diagram; className?: string }) {
+function StepList({ diagram, className, labels }: { diagram: Diagram; className?: string; labels: DiagramLabels }) {
     const byId = new Map(diagram.nodes.map((n) => [n.id, n]));
     const ordered = [...diagram.nodes].sort((a, b) => a.col - b.col || a.row - b.row);
 
@@ -118,7 +122,7 @@ function StepList({ diagram, className }: { diagram: Diagram; className?: string
                     <li key={node.id} className="relative">
                         <span className={cn('absolute top-4 -left-[23.5px] size-2 rounded-full ring-4 ring-bg', typeTone[node.type])} aria-hidden="true" />
                         <div className="rounded-xl border border-border bg-surface p-3">
-                            <p className="font-mono text-[10px] tracking-wider text-muted uppercase">{typeLabel[node.type]}</p>
+                            <p className="font-mono text-[10px] tracking-wider text-muted uppercase">{labels[node.type]}</p>
                             <p className="text-sm font-semibold">{node.label}</p>
                             {node.sublabel && <p className="text-xs text-muted">{node.sublabel}</p>}
                             {outgoing.length > 0 && (
@@ -129,7 +133,7 @@ function StepList({ diagram, className }: { diagram: Diagram; className?: string
                                             <span>
                                                 <span className="text-text">{byId.get(edge.to)?.label ?? edge.to}</span>
                                                 {edge.label && <> · {edge.label}</>}
-                                                {edge.mode === 'async' && <span className="sr-only"> (asynchronous)</span>}
+                                                {edge.mode === 'async' && <span className="sr-only"> {labels.async}</span>}
                                             </span>
                                         </li>
                                     ))}

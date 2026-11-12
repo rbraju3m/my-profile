@@ -6,6 +6,26 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
  * off the main thread and needs no animation library.
  */
 let observer: IntersectionObserver | null = null;
+const pending = new Set<HTMLElement>();
+
+function reveal(el: HTMLElement) {
+    el.dataset.revealed = '';
+    pending.delete(el);
+    observer?.unobserve(el);
+}
+
+/*
+ * When frames are slow (a busy phone, a fast flick), an element can go from
+ * below the viewport to above it between two frames. The observer never reports
+ * that, since it was not intersecting either time, so it would stay hidden.
+ * After every observer callback, and when scrolling stops, anything already
+ * scrolled past is revealed.
+ */
+function sweep() {
+    for (const el of pending) {
+        if (el.getBoundingClientRect().bottom < 0) reveal(el);
+    }
+}
 
 function observe(el: HTMLElement): () => void {
     if (typeof IntersectionObserver === 'undefined') {
@@ -13,21 +33,27 @@ function observe(el: HTMLElement): () => void {
         return () => {};
     }
 
-    observer ??= new IntersectionObserver(
-        (entries) => {
-            for (const entry of entries) {
-                // In view, or already scrolled past (e.g. it hydrated late, or the visit started at #contact).
-                if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
-                    (entry.target as HTMLElement).dataset.revealed = '';
-                    observer?.unobserve(entry.target);
+    if (!observer) {
+        observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    // In view, or already scrolled past (e.g. it hydrated late, or the visit started at #contact).
+                    if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) reveal(entry.target as HTMLElement);
                 }
-            }
-        },
-        { rootMargin: '0px 0px -60px 0px' },
-    );
+                sweep();
+            },
+            { rootMargin: '0px 0px -60px 0px' },
+        );
+        window.addEventListener('scrollend', sweep, { passive: true });
+    }
+
+    pending.add(el);
     observer.observe(el);
 
-    return () => observer?.unobserve(el);
+    return () => {
+        pending.delete(el);
+        observer?.unobserve(el);
+    };
 }
 
 /**

@@ -35,19 +35,34 @@
         <meta name="robots" content="noindex">
     @endisset
 
-    <meta name="theme-color" content="#0A0B0D" media="(prefers-color-scheme: dark)">
-    <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
+    @php($themeConfig = app(\App\Support\Themes::class)->config())
+    <meta name="theme-color" content="{{ collect($themeConfig['themes'])->firstWhere('key', $themeConfig['default'])['bg'] ?? '#0a0b0d' }}">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
-    {{-- Runs before first paint so the wrong theme never flashes. --}}
+    {{--
+        Runs before first paint so the wrong theme never flashes. The visitor's
+        saved choice wins if it is still offered; otherwise the admin's default
+        (Appearance settings). "system" follows the device's light/dark setting.
+        Keep in sync with resources/js/site/lib/useTheme.ts.
+    --}}
     <script nonce="{{ Vite::cspNonce() }}">
         document.documentElement.classList.add('js');
-        try {
-            var t = localStorage.getItem('theme');
-            var dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', dark);
-            document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-        } catch (e) {}
+        (function (c) {
+            var root = document.documentElement, byKey = {}, pick = null;
+            c.themes.forEach(function (t) { byKey[t.key] = t; });
+            try { pick = localStorage.getItem('theme'); } catch (e) {}
+            if (pick !== 'system' && !byKey[pick]) pick = c.default;
+            if (!byKey[pick]) {
+                var scheme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                pick = (c.themes.filter(function (t) { return t.scheme === scheme; })[0] || c.themes[0]).key;
+            }
+            var theme = byKey[pick];
+            root.dataset.theme = theme.key;
+            root.classList.toggle('dark', theme.scheme === 'dark');
+            root.style.colorScheme = theme.scheme;
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', theme.bg);
+        })({{ Js::from($themeConfig) }});
     </script>
 
     @viteReactRefresh

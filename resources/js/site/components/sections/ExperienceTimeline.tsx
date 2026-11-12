@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 import type { Experience, SectionCopy } from '@/shared/types';
 
 import { Reveal } from '../ui/Reveal';
@@ -30,11 +32,14 @@ export function ExperienceTimeline({ copy, experiences }: { copy: SectionCopy; e
                                 </header>
 
                                 <div className="relative space-y-8 border-l border-border pl-6 sm:pl-8">
-                                    {job.phases.map((phase) => (
+                                    {/* The line fills with the accent colour as it scrolls through the viewport (site.css). */}
+                                    <span aria-hidden="true" className="timeline-fill absolute top-0 -left-px h-full w-px bg-accent" />
+                                    {job.phases.map((phase, p) => (
                                         <section key={phase.title} aria-label={phase.title} className="relative">
                                             <span
                                                 aria-hidden="true"
-                                                className="absolute top-1.5 -left-[29px] size-2.5 rounded-full border-2 border-accent bg-bg sm:-left-[37px]"
+                                                style={{ '--i': p } as CSSProperties}
+                                                className="timeline-dot absolute top-1.5 -left-[29px] size-2.5 rounded-full border-2 border-accent bg-bg sm:-left-[37px]"
                                             />
                                             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                                                 <h4 className="font-semibold">{phase.title}</h4>

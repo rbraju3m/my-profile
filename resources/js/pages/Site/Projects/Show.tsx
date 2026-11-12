@@ -1,7 +1,7 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, ExternalLink, Info } from 'lucide-react';
 
-import type { ProjectDetail } from '@/shared/types';
+import type { ProjectDetail, SharedProps } from '@/shared/types';
 
 import { FlowDiagram } from '@/site/components/diagrams/FlowDiagram';
 import { Layout } from '@/site/components/Layout';
@@ -17,11 +17,13 @@ type Props = {
 };
 
 export default function ProjectShow({ project, previous, next }: Props) {
+    const { labels } = usePage<SharedProps>().props;
+    const t = labels.project;
     const facts = [
-        { label: 'Role', value: project.role },
-        { label: 'Client', value: project.client },
-        { label: 'Company', value: project.company },
-        { label: 'Period', value: project.period },
+        { label: t.role, value: project.role },
+        { label: t.client, value: project.client },
+        { label: t.company, value: project.company },
+        { label: t.period, value: project.period },
     ].filter((f): f is { label: string; value: string } => Boolean(f.value));
 
     return (
@@ -34,13 +36,13 @@ export default function ProjectShow({ project, previous, next }: Props) {
                             <ol className="flex items-center gap-2 text-sm text-muted">
                                 <li>
                                     <Link href="/" className="hover:text-text">
-                                        Home
+                                        {labels.common.home}
                                     </Link>
                                 </li>
                                 <li aria-hidden="true">/</li>
                                 <li>
                                     <Link href="/projects" className="hover:text-text">
-                                        Projects
+                                        {labels.common.projects}
                                     </Link>
                                 </li>
                             </ol>
@@ -73,28 +75,28 @@ export default function ProjectShow({ project, previous, next }: Props) {
                 <Container className="grid gap-12 py-12 sm:py-16 lg:grid-cols-[1fr_300px] lg:gap-16">
                     <div className="min-w-0 space-y-14">
                         {project.problem && (
-                            <Block title="The problem">
+                            <Block title={t.problem}>
                                 <p className="text-pretty">{project.problem}</p>
                             </Block>
                         )}
 
                         {project.contribution && (
-                            <Block title="What I did">
+                            <Block title={t.contribution}>
                                 <div className="prose-content" dangerouslySetInnerHTML={{ __html: project.contribution }} />
                                 {project.authorship_note && <p className="mt-4 border-l-2 border-accent pl-3 text-sm">{project.authorship_note}</p>}
                             </Block>
                         )}
 
                         {project.diagrams.map((diagram) => (
-                            <Block key={diagram.slug} title={`Architecture: ${diagram.title}`}>
+                            <Block key={diagram.slug} title={`${t.architecture}: ${diagram.title}`}>
                                 <div className="rounded-2xl border border-border bg-surface/50 p-4 sm:p-6">
-                                    <FlowDiagram diagram={diagram} />
+                                    <FlowDiagram diagram={diagram} labels={labels.diagram} />
                                 </div>
                             </Block>
                         ))}
 
                         {project.features.length > 0 && (
-                            <Block title="Key features">
+                            <Block title={t.features}>
                                 <ul className="grid gap-3 sm:grid-cols-2">
                                     {project.features.map((feature) => (
                                         <li key={feature} className="rounded-xl border border-border bg-surface p-4 text-sm text-pretty">
@@ -106,7 +108,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                         )}
 
                         {project.challenges.length > 0 && (
-                            <Block title="Challenges and solutions">
+                            <Block title={t.challenges}>
                                 <ol className="space-y-4">
                                     {project.challenges.map((c, i) => (
                                         <li key={c.challenge} className="grid gap-3 rounded-xl border border-border bg-surface p-5 sm:grid-cols-[auto_1fr]">
@@ -122,7 +124,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                         )}
 
                         {project.gallery.length > 0 && (
-                            <Block title="Screens">
+                            <Block title={t.screens}>
                                 <ul className="grid gap-4 sm:grid-cols-2">
                                     {project.gallery.map((image) => (
                                         <li key={image.url} className="overflow-hidden rounded-xl border border-border">
@@ -138,7 +140,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                         {project.metrics.length > 0 && (
                             <section aria-labelledby="metrics-heading">
                                 <h2 id="metrics-heading" className="font-mono text-xs tracking-widest text-muted uppercase">
-                                    Verified numbers
+                                    {t.metrics}
                                 </h2>
                                 <dl className="mt-3 divide-y divide-border rounded-xl border border-border bg-surface">
                                     {project.metrics.map((m) => (
@@ -155,13 +157,13 @@ export default function ProjectShow({ project, previous, next }: Props) {
                         )}
                         <section aria-labelledby="stack-heading">
                             <h2 id="stack-heading" className="font-mono text-xs tracking-widest text-muted uppercase">
-                                Technologies
+                                {t.technologies}
                             </h2>
                             <ul className="mt-3 flex flex-wrap gap-1.5">
-                                {project.technologies.map((t) => (
-                                    <li key={t.slug}>
-                                        <Link href={`/projects?tech=${t.slug}`}>
-                                            <Tag className="transition-colors hover:border-accent hover:text-text">{t.name}</Tag>
+                                {project.technologies.map((tech) => (
+                                    <li key={tech.slug}>
+                                        <Link href={`/projects?tech=${tech.slug}`}>
+                                            <Tag className="transition-colors hover:border-accent hover:text-text">{tech.name}</Tag>
                                         </Link>
                                     </li>
                                 ))}
@@ -170,7 +172,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                         {project.public_links.length > 0 && (
                             <section aria-labelledby="links-heading">
                                 <h2 id="links-heading" className="font-mono text-xs tracking-widest text-muted uppercase">
-                                    Links
+                                    {t.links}
                                 </h2>
                                 <ul className="mt-3 space-y-2">
                                     {project.public_links.map((l) => (
@@ -197,7 +199,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                         {previous ? (
                             <Link href={`/projects/${previous.slug}`} className="group rounded-xl border border-border p-4 transition-colors hover:border-border-strong">
                                 <span className="inline-flex items-center gap-1 text-xs text-muted">
-                                    <ArrowLeft className="size-3.5" aria-hidden="true" /> Previous
+                                    <ArrowLeft className="size-3.5" aria-hidden="true" /> {t.previous}
                                 </span>
                                 <span className="mt-1 block font-medium group-hover:text-accent">{previous.title}</span>
                             </Link>
@@ -210,7 +212,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                                 className="group rounded-xl border border-border p-4 text-right transition-colors hover:border-border-strong"
                             >
                                 <span className="inline-flex items-center gap-1 text-xs text-muted">
-                                    Next <ArrowRight className="size-3.5" aria-hidden="true" />
+                                    {t.next} <ArrowRight className="size-3.5" aria-hidden="true" />
                                 </span>
                                 <span className="mt-1 block font-medium group-hover:text-accent">{next.title}</span>
                             </Link>

@@ -11,7 +11,7 @@ beforeEach(fn () => $this->seed(PortfolioSeeder::class));
 it('renders the home page with every section filled from the database', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSee('<title data-inertia>Rashedul Raju · Senior Software Engineer (Laravel &amp; React)</title>', false)
+        ->assertSee('<title data-inertia>Md. Rashedul Bari Raju · Senior Software Engineer (Laravel &amp; React)</title>', false)
         ->assertSee('application/ld+json', false)
         ->assertInertia(fn (Assert $page) => $page
             ->component('Site/Home')

@@ -1,8 +1,9 @@
 import { Head, usePage } from '@inertiajs/react';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import type { SharedProps } from '@/shared/types';
 
+import { installPointerEffects } from '../lib/pointerEffects';
 import { Footer } from './sections/Footer';
 import { Nav } from './sections/Nav';
 
@@ -10,7 +11,9 @@ type Meta = { title: string; description: string };
 
 /** Shell shared by every public page: skip link, nav, main, footer. */
 export function Layout({ children, onHome = false }: { children: ReactNode; onHome?: boolean }) {
-    const { meta } = usePage<SharedProps & { meta: Meta }>().props;
+    const { meta, labels } = usePage<SharedProps & { meta: Meta }>().props;
+
+    useEffect(() => installPointerEffects(), []);
 
     return (
         <>
@@ -30,8 +33,10 @@ export function Layout({ children, onHome = false }: { children: ReactNode; onHo
                 href="#main"
                 className="sr-only z-50 rounded-md bg-accent px-3 py-2 text-sm text-accent-contrast focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
             >
-                Skip to content
+                {labels.common.skip}
             </a>
+            {/* Reading progress: a CSS scroll-driven animation, no JavaScript (site.css). */}
+            <div aria-hidden="true" className="scroll-progress" />
             <Nav onHome={onHome} />
             <main id="main" tabIndex={-1} className="outline-none">
                 {children}

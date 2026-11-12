@@ -166,7 +166,7 @@ it('uploads a CV and serves it at /cv', function () {
     auth()->logout();
 
     $this->get('/')->assertInertia(fn (Assert $page) => $page->where('site.has_cv', true)->etc());
-    $this->get('/cv')->assertOk()->assertDownload('rashedul-raju-cv.pdf');
+    $this->get('/cv')->assertOk()->assertDownload('md-rashedul-bari-raju-cv.pdf');
 });
 
 it('only accepts PDFs as the CV', function () {

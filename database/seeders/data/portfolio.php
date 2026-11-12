@@ -14,7 +14,7 @@ return [
 
     'settings' => [
         'site' => [
-            'name' => 'Rashedul Raju',
+            'name' => 'Md. Rashedul Bari Raju',
             'title' => 'Senior Software Engineer',
             'role_line' => 'Full-Stack Software Engineer · Laravel & React',
             'location' => 'Uttara, Dhaka, Bangladesh',
@@ -31,10 +31,17 @@ return [
             ],
         ],
 
+        // Colour themes: dark by default; visitors can switch between all six.
+        'appearance' => [
+            'default_theme' => 'dark',
+            'themes' => ['dark', 'light', 'midnight', 'aurora', 'ember', 'paper'],
+            'picker' => true,
+        ],
+
         'hero' => [
             'eyebrow' => 'Senior Software Engineer · Right Brain Solution',
             'headline' => 'Building scalable software for real-world problems.',
-            'subheading' => "I'm Rashedul Raju, a full-stack software engineer specialising in Laravel, React, enterprise applications, healthcare systems and API-driven platforms.",
+            'subheading' => "I'm Md. Rashedul Bari Raju, a full-stack software engineer specialising in Laravel, React, enterprise applications, healthcare systems and API-driven platforms.",
             'chips' => ['Laravel & Symfony', 'React & TypeScript', 'DICOM · HL7 · ASTM', 'OCR pipelines'],
             'primary_cta' => ['label' => 'View projects', 'href' => '#projects'],
             'secondary_cta' => ['label' => 'Download CV', 'href' => '/cv'],
@@ -72,8 +79,8 @@ return [
         ],
 
         'seo' => [
-            'title_template' => '%s · Rashedul Raju',
-            'default_title' => 'Rashedul Raju · Senior Software Engineer (Laravel & React)',
+            'title_template' => '%s · Md. Rashedul Bari Raju',
+            'default_title' => 'Md. Rashedul Bari Raju · Senior Software Engineer (Laravel & React)',
             'description' => 'Senior full-stack engineer in Dhaka building multi-tenant ERPs, hospital systems, medical device integrations (DICOM, HL7, ASTM), OCR pipelines and mobile app infrastructure with Laravel and React.',
         ],
 
@@ -99,7 +106,7 @@ return [
 
         'footer' => [
             'tagline' => 'Senior Software Engineer building business platforms, healthcare integrations and document pipelines.',
-            'copyright' => '© {year} Rashedul Raju. All rights reserved.',
+            'copyright' => '© {year} Md. Rashedul Bari Raju. All rights reserved.',
         ],
     ],
 

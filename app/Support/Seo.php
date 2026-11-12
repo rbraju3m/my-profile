@@ -61,6 +61,7 @@ final class Seo
             '@type' => 'Person',
             'name' => $site['name'] ?? null,
             'jobTitle' => $site['title'] ?? null,
+            'image' => $this->settings->photo()['portrait'] ?? null,
             'url' => url('/'),
             'homeLocation' => isset($site['location']) ? ['@type' => 'Place', 'name' => $site['location']] : null,
             'worksFor' => ($job = Experience::query()->whereNull('ended_at')->orderBy('sort_order')->first())

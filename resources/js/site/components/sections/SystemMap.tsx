@@ -1,30 +1,42 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { ArrowUpRight } from 'lucide-react';
+import type { CSSProperties } from 'react';
 
-import type { HeroContent } from '@/shared/types';
+import type { HeroContent, SharedProps } from '@/shared/types';
 
 /**
  * The hero visual: three real data flows from the projects, drawn as a
  * small live system map. Each row links to the case study it comes from.
+ * It tilts toward the cursor ([data-tilt]) and a highlight scans the rows in turn.
  */
 export function SystemMap({ flows }: { flows: HeroContent['flows'] }) {
+    const { labels } = usePage<SharedProps>().props;
+
     if (flows.length === 0) return null;
 
     return (
-        <div className="relative rounded-2xl border border-border bg-surface/80 p-2 shadow-[0_30px_80px_-40px_var(--accent-glow)] backdrop-blur-sm">
+        <div
+            data-tilt=""
+            data-spotlight=""
+            className="relative rounded-2xl border border-border bg-surface/80 p-2 shadow-[0_30px_80px_-40px_var(--accent-glow)] backdrop-blur-sm"
+        >
             <div className="flex items-center gap-1.5 border-b border-border px-3 py-2.5">
                 <span className="size-2.5 rounded-full bg-border-strong" />
                 <span className="size-2.5 rounded-full bg-border-strong" />
                 <span className="size-2.5 rounded-full bg-border-strong" />
-                <span className="ml-2 font-mono text-[11px] text-muted">systems/in-production.map</span>
+                <span className="ml-2 font-mono text-[11px] text-muted">
+                    {labels.home.map_title}
+                    <span aria-hidden="true" className="map-caret ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-accent" />
+                </span>
             </div>
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border" style={{ '--n': flows.length } as CSSProperties}>
                 {flows.map((flow, i) => (
                     <li key={`${i}-${flow.project}`}>
                         <Link
                             href={`/projects/${flow.project}`}
-                            className="group block rounded-xl px-3 py-4 transition-colors hover:bg-surface-2 sm:px-4"
+                            className="group relative isolate block rounded-xl px-3 py-4 transition-colors hover:bg-surface-2 sm:px-4"
                         >
+                            <span aria-hidden="true" className="map-scan" style={{ '--i': i } as CSSProperties} />
                             <div className="flex items-center justify-between">
                                 <span className="font-mono text-[11px] tracking-wider text-muted uppercase">{flow.label}</span>
                                 <ArrowUpRight

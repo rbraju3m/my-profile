@@ -6,13 +6,13 @@ import { cn } from '../../lib/cn';
 type Variant = 'primary' | 'secondary' | 'ghost';
 
 const styles: Record<Variant, string> = {
-    primary: 'bg-accent text-accent-contrast hover:bg-accent-strong shadow-[0_0_0_1px_var(--accent),0_8px_24px_-8px_var(--accent-glow)]',
+    primary: 'btn-shine bg-accent text-accent-contrast hover:bg-accent-strong shadow-[0_0_0_1px_var(--accent),0_8px_24px_-8px_var(--accent-glow)]',
     secondary: 'border border-border bg-surface text-text hover:border-border-strong hover:bg-surface-2',
     ghost: 'text-muted hover:text-text hover:bg-surface-2',
 };
 
 const base =
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-60';
+    'group/btn inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.97] motion-reduce:active:scale-100 disabled:pointer-events-none disabled:opacity-60';
 
 type Props = {
     href?: string;

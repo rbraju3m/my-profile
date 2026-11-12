@@ -16,11 +16,54 @@ export type SiteShared = {
     socials: { label: string; url: string; icon: string }[];
     availability: { enabled: boolean; text: string };
     has_cv: boolean;
+    /** Portrait (640×800) and square avatar (192×192) URLs, uploaded in the admin. */
+    photo: { portrait: string; avatar: string } | null;
     contact: { email: string | null; phone: string | null; whatsapp: string | null };
+};
+
+export type ThemeOption = { key: string; label: string; scheme: 'light' | 'dark'; bg: string };
+
+/** App\Support\Themes::config(): the themes offered and the default ('system' = follow the device). */
+export type Appearance = { default: string; picker: boolean; themes: ThemeOption[] };
+
+/** App\Support\SiteLabels: interface texts, edited in the admin under Labels. */
+export type Labels = {
+    common: Record<'theme' | 'theme_system' | 'download_cv' | 'skip' | 'open_menu' | 'close_menu' | 'home' | 'projects', string>;
+    home: Record<'about_eyebrow' | 'education' | 'map_title' | 'all_projects' | 'more_work' | 'case_studies', string>;
+    contact: Record<
+        'email' | 'phone' | 'whatsapp' | 'location' | 'name' | 'form_email' | 'subject' | 'message' | 'required' | 'send' | 'sending' | 'send_another' | 'verify',
+        string
+    >;
+    projects: Record<
+        'search' | 'search_placeholder' | 'category' | 'status' | 'technology' | 'show_all' | 'show_fewer' | 'clear' | 'empty' | 'count_one' | 'count_many',
+        string
+    >;
+    project: Record<
+        | 'role'
+        | 'client'
+        | 'company'
+        | 'period'
+        | 'problem'
+        | 'contribution'
+        | 'architecture'
+        | 'features'
+        | 'challenges'
+        | 'screens'
+        | 'metrics'
+        | 'technologies'
+        | 'links'
+        | 'previous'
+        | 'next',
+        string
+    >;
+    footer: Record<'navigate' | 'elsewhere' | 'all_projects', string>;
+    diagram: Record<'device' | 'service' | 'queue' | 'storage' | 'user' | 'external' | 'async', string>;
 };
 
 export type SharedProps = {
     site: SiteShared;
+    appearance: Appearance;
+    labels: Labels;
     nav: Link[];
     footer: { tagline?: string; copyright?: string };
     flash: { success: string | null };

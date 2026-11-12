@@ -17,8 +17,9 @@ export function ProjectCard({ project, featured = false, headingLevel = 'h3' }: 
 
     return (
         <article
+            data-spotlight=""
             className={cn(
-                'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-[border-color,transform,box-shadow] duration-300',
+                'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-[border-color,translate,box-shadow] duration-300',
                 'hover:-translate-y-0.5 hover:border-border-strong hover:shadow-[0_20px_50px_-30px_var(--accent-glow)] motion-reduce:hover:translate-y-0',
                 'focus-within:border-accent',
             )}

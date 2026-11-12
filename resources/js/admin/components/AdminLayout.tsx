@@ -54,6 +54,8 @@ const settings = [
     { href: '/admin/settings/nav', label: 'Navigation' },
     { href: '/admin/settings/footer', label: 'Footer' },
     { href: '/admin/settings/seo', label: 'SEO & sharing' },
+    { href: '/admin/settings/appearance', label: 'Appearance' },
+    { href: '/admin/settings/labels', label: 'Labels' },
 ];
 
 export function AdminLayout({ title, children }: { title: string; children: ReactNode }) {

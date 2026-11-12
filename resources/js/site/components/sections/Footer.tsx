@@ -6,7 +6,7 @@ import { Container } from '../ui/Container';
 import { Icon } from '../ui/Icon';
 
 export function Footer({ onHome }: { onHome: boolean }) {
-    const { site, nav, footer } = usePage<SharedProps>().props;
+    const { site, nav, footer, labels } = usePage<SharedProps>().props;
     const copyright = (footer.copyright ?? '').replace('{year}', String(new Date().getFullYear()));
 
     return (
@@ -18,7 +18,7 @@ export function Footer({ onHome }: { onHome: boolean }) {
                     {footer.tagline && <p className="mt-4 max-w-sm text-sm text-pretty text-muted">{footer.tagline}</p>}
                 </div>
                 <nav aria-label="Footer">
-                    <p className="font-mono text-xs tracking-widest text-muted uppercase">Navigate</p>
+                    <p className="font-mono text-xs tracking-widest text-muted uppercase">{labels.footer.navigate}</p>
                     <ul className="mt-3 space-y-2">
                         {nav.map((item) => (
                             <li key={item.href}>
@@ -29,13 +29,13 @@ export function Footer({ onHome }: { onHome: boolean }) {
                         ))}
                         <li>
                             <a href="/projects" className="text-sm text-muted transition-colors hover:text-text">
-                                All projects
+                                {labels.footer.all_projects}
                             </a>
                         </li>
                     </ul>
                 </nav>
                 <div>
-                    <p className="font-mono text-xs tracking-widest text-muted uppercase">Elsewhere</p>
+                    <p className="font-mono text-xs tracking-widest text-muted uppercase">{labels.footer.elsewhere}</p>
                     <ul className="mt-3 space-y-2">
                         {site.socials.map((social) => (
                             <li key={social.url}>

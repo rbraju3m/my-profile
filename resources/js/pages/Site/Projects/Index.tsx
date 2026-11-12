@@ -1,7 +1,8 @@
+import { usePage } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
-import type { Option, ProjectCard as Card, StatusValue } from '@/shared/types';
+import type { Option, ProjectCard as Card, SharedProps, StatusValue } from '@/shared/types';
 
 import { Layout } from '@/site/components/Layout';
 import { ProjectCard } from '@/site/components/projects/ProjectCard';
@@ -24,6 +25,8 @@ type Props = {
 const EMPTY: ProjectFilter = { query: '', category: null, status: null, tech: null };
 
 export default function ProjectsIndex({ projects, filters, meta, initial }: Props) {
+    const { labels } = usePage<SharedProps>().props;
+    const t = labels.projects;
     const [filter, setFilter] = useState<ProjectFilter>(initial);
     const [showAllTech, setShowAllTech] = useState(false);
 
@@ -47,7 +50,7 @@ export default function ProjectsIndex({ projects, filters, meta, initial }: Prop
         <Layout>
             <Container className="pt-12 pb-24 sm:pt-16">
                 <header className="max-w-2xl">
-                    <p className="font-mono text-xs font-medium tracking-widest text-accent uppercase">Projects</p>
+                    <p className="font-mono text-xs font-medium tracking-widest text-accent uppercase">{labels.common.projects}</p>
                     <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{meta.title.split(' · ')[0]}</h1>
                     <p className="mt-4 text-lg text-pretty text-muted">{meta.description}</p>
                 </header>
@@ -56,39 +59,39 @@ export default function ProjectsIndex({ projects, filters, meta, initial }: Prop
                     <div className="relative">
                         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
                         <label htmlFor="project-search" className="sr-only">
-                            Search projects
+                            {t.search}
                         </label>
                         <input
                             id="project-search"
                             type="search"
                             value={filter.query}
                             onChange={(e) => set({ query: e.target.value })}
-                            placeholder="Search by name, client or technology…"
+                            placeholder={t.search_placeholder}
                             className="block min-h-11 w-full rounded-lg border border-border bg-bg pr-3 pl-9 text-sm placeholder:text-muted focus:border-accent focus:outline-none"
                         />
                     </div>
 
                     <ChipGroup
-                        label="Category"
+                        label={t.category}
                         options={filters.categories.map((c) => ({ value: c.value, label: c.label }))}
                         value={filter.category}
                         onChange={(category) => set({ category })}
                     />
                     <ChipGroup
-                        label="Status"
+                        label={t.status}
                         options={filters.statuses.map((s) => ({ value: s.value, label: s.label }))}
                         value={filter.status}
                         onChange={(status) => set({ status })}
                     />
                     <ChipGroup
-                        label="Technology"
+                        label={t.technology}
                         options={tech.map((t) => ({ value: t.slug, label: `${t.name} · ${t.count}` }))}
                         value={filter.tech}
                         onChange={(t) => set({ tech: t })}
                         after={
                             filters.technologies.length > 14 && (
                                 <button type="button" onClick={() => setShowAllTech((v) => !v)} className="min-h-9 px-2 text-xs text-accent hover:underline">
-                                    {showAllTech ? 'Show fewer' : `Show all ${filters.technologies.length}`}
+                                    {showAllTech ? t.show_fewer : t.show_all.replace(':count', String(filters.technologies.length))}
                                 </button>
                             )
                         }
@@ -97,12 +100,12 @@ export default function ProjectsIndex({ projects, filters, meta, initial }: Prop
 
                 <div className="mt-8 flex items-center justify-between gap-4">
                     <p className="text-sm text-muted" role="status" aria-live="polite">
-                        {results.length} {results.length === 1 ? 'project' : 'projects'}
+                        {(results.length === 1 ? t.count_one : t.count_many).replace(':count', String(results.length))}
                     </p>
                     {active && (
                         <button type="button" onClick={() => setFilter(EMPTY)} className="inline-flex min-h-9 items-center gap-1 text-sm text-accent hover:underline">
                             <X className="size-4" aria-hidden="true" />
-                            Clear filters
+                            {t.clear}
                         </button>
                     )}
                 </div>
@@ -117,9 +120,9 @@ export default function ProjectsIndex({ projects, filters, meta, initial }: Prop
                     </ul>
                 ) : (
                     <div className="mt-5 rounded-2xl border border-dashed border-border p-12 text-center">
-                        <p className="font-medium">No projects match these filters.</p>
+                        <p className="font-medium">{t.empty}</p>
                         <button type="button" onClick={() => setFilter(EMPTY)} className="mt-2 text-sm text-accent hover:underline">
-                            Clear filters
+                            {t.clear}
                         </button>
                     </div>
                 )}

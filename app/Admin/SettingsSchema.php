@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Admin;
 
+use App\Support\SiteLabels;
+use App\Support\Themes;
 use Illuminate\Validation\Rule;
 
 /**
@@ -13,7 +15,7 @@ use Illuminate\Validation\Rule;
  */
 final class SettingsSchema
 {
-    public const GROUPS = ['site', 'hero', 'about', 'sections', 'nav', 'footer', 'seo'];
+    public const GROUPS = ['site', 'hero', 'about', 'sections', 'nav', 'footer', 'seo', 'appearance', 'labels'];
 
     public const SECTION_KEYS = ['skills', 'experience', 'projects', 'engineering', 'architecture', 'contact'];
 
@@ -84,6 +86,13 @@ final class SettingsSchema
                 'default_title' => ['required', 'string', 'max:120'],
                 'description' => ['required', 'string', 'max:300'],
             ],
+            'appearance' => [
+                'default_theme' => ['required', 'string', Rule::in([...array_keys(Themes::ALL), Themes::SYSTEM])],
+                'themes' => ['required', 'array', 'min:1'],
+                'themes.*' => ['required', 'string', 'distinct', Rule::in(array_keys(Themes::ALL))],
+                'picker' => ['required', 'boolean'],
+            ],
+            'labels' => SiteLabels::rules(),
             default => throw new \InvalidArgumentException("Unknown settings group [{$group}]."),
         };
     }

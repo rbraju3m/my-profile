@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { posts, setPageProps } from '@/test-utils/inertia';
+import { labels } from '@/test-utils/labels';
 
 import { Contact } from './Contact';
 
@@ -22,7 +23,7 @@ const site = {
 };
 
 function props(overrides: Record<string, unknown> = {}) {
-    return { site, nav: [], footer: {}, flash: { success: null }, turnstileSiteKey: null, ...overrides };
+    return { site, labels, nav: [], footer: {}, flash: { success: null }, turnstileSiteKey: null, ...overrides };
 }
 
 const fill = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });

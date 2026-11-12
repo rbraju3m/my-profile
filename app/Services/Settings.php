@@ -54,6 +54,24 @@ final class Settings
             ->where('group', 'seo')->first()?->getFirstMediaUrl('og_image') ?: null);
     }
 
+    /**
+     * The owner's portrait (site row), in its two sizes, or null.
+     *
+     * @return array{portrait: string, avatar: string}|null
+     */
+    public function photo(): ?array
+    {
+        /** @var array{portrait: string, avatar: string}|null */
+        return Cache::rememberForever(self::CACHE_KEY.'.photo', function (): ?array {
+            $media = Setting::query()->where('group', 'site')->first()?->getFirstMedia('photo');
+
+            return $media === null ? null : [
+                'portrait' => $media->getUrl('portrait'),
+                'avatar' => $media->getUrl('avatar'),
+            ];
+        });
+    }
+
     public function hasCv(): bool
     {
         return Cache::rememberForever(self::CACHE_KEY.'.has_cv', fn (): bool => $this->cv() !== null);
@@ -64,5 +82,6 @@ final class Settings
         Cache::forget(self::CACHE_KEY);
         Cache::forget(self::CACHE_KEY.'.has_cv');
         Cache::forget(self::CACHE_KEY.'.og');
+        Cache::forget(self::CACHE_KEY.'.photo');
     }
 }

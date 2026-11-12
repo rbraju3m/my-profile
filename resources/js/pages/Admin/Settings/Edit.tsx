@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Anchor, Button, Card, Divider, FileButton, Group, Select, SimpleGrid, Stack, Switch, Text, Textarea, TextInput } from '@mantine/core';
+import { Anchor, Avatar, Button, Checkbox, Card, Divider, FileButton, Group, Select, SimpleGrid, Stack, Switch, Text, Textarea, TextInput } from '@mantine/core';
 import { FileText, ImageUp, Upload } from 'lucide-react';
 import { useState, type FormEvent, type ReactNode } from 'react';
 
@@ -15,12 +15,15 @@ import type { SelectOption } from '@/admin/types';
 type FileInfo = { name: string; size: number; url: string; updated: string | null } | null;
 
 type Props = {
-    group: 'site' | 'hero' | 'about' | 'sections' | 'nav' | 'footer' | 'seo';
+    group: 'site' | 'hero' | 'about' | 'sections' | 'nav' | 'footer' | 'seo' | 'appearance' | 'labels';
     value: Record<string, unknown>;
     projects: SelectOption[];
     icons: string[];
     cv: FileInfo;
+    photo: FileInfo;
     ogImage: FileInfo;
+    themes: { value: string; label: string; scheme: 'light' | 'dark' }[];
+    labelSchema: { key: string; title: string; fields: { key: string; label: string; default: string }[] }[];
 };
 
 const titles: Record<Props['group'], [string, string]> = {
@@ -31,6 +34,8 @@ const titles: Record<Props['group'], [string, string]> = {
     nav: ['Navigation', 'Menu links in the header and footer. Use #section for home page sections.'],
     footer: ['Footer', 'Footer text. {year} in the copyright line becomes the current year.'],
     seo: ['SEO & sharing', 'How the site appears in search results and when shared on social media.'],
+    appearance: ['Appearance', 'Colour themes: which one visitors see first, and which ones they can switch to.'],
+    labels: ['Labels', 'The small texts of the site: form labels, buttons and fixed headings. Leave a field empty to use the default shown in grey.'],
 };
 
 /* Every group is edited with the same form; the fields differ per group. */
@@ -54,7 +59,18 @@ export default function SettingsEdit(props: Props) {
         <AdminLayout title={title}>
             <PageHeader title={title} description={description} crumbs={[{ label: 'Site settings' }, { label: title }]} />
 
-            {props.group === 'site' && <FileCard title="CV (PDF)" kind="cv" file={props.cv} accept="application/pdf" hint="Shown as the Download CV button. Max 10 MB." />}
+            {props.group === 'site' && (
+                <>
+                    <FileCard
+                        title="Your photo"
+                        kind="photo"
+                        file={props.photo}
+                        accept="image/png,image/jpeg,image/webp"
+                        hint="Shown in the hero, the About section and the header. A head-and-shoulders photo, portrait 4:5, at least 400 × 500 px."
+                    />
+                    <FileCard title="CV (PDF)" kind="cv" file={props.cv} accept="application/pdf" hint="Shown as the Download CV button. Max 10 MB." />
+                </>
+            )}
             {props.group === 'seo' && (
                 <FileCard title="Default share image" kind="og_image" file={props.ogImage} accept="image/png,image/jpeg,image/webp" hint="Used when the site is shared on social media. 1200 × 630 px recommended." />
             )}
@@ -66,6 +82,8 @@ export default function SettingsEdit(props: Props) {
                         {props.group === 'hero' && <HeroFields data={data} set={set} err={err} projects={props.projects} />}
                         {props.group === 'about' && <AboutFields data={data} set={set} err={err} />}
                         {props.group === 'sections' && <SectionFields data={data} set={set} err={err} />}
+                        {props.group === 'appearance' && <AppearanceFields data={data} set={set} err={err} themes={props.themes} />}
+                        {props.group === 'labels' && <LabelFields data={data} set={set} err={err} schema={props.labelSchema} />}
                         {props.group === 'nav' && (
                             <RepeaterInput
                                 label="Menu items"
@@ -93,7 +111,7 @@ export default function SettingsEdit(props: Props) {
                                 <TextInput label="Home page title" value={data.default_title} onChange={(e) => set('default_title', e.currentTarget.value)} error={err('default_title')} />
                                 <TextInput
                                     label="Title template for other pages"
-                                    description="%s is replaced by the page name, e.g. “%s · Rashedul Raju”."
+                                    description="%s is replaced by the page name, e.g. “%s · Md. Rashedul Bari Raju”."
                                     value={data.title_template}
                                     onChange={(e) => set('title_template', e.currentTarget.value)}
                                     error={err('title_template')}
@@ -270,7 +288,72 @@ function SectionFields({ data, set, err }: FieldProps) {
     );
 }
 
-function FileCard({ title, kind, file, accept, hint }: { title: string; kind: 'cv' | 'og_image'; file: FileInfo; accept: string; hint: ReactNode }) {
+function AppearanceFields({ data, set, err, themes }: FieldProps & { themes: Props['themes'] }) {
+    const offered: string[] = data.themes ?? [];
+    const defaultOptions = [
+        { value: 'system', label: 'Follow the visitor’s device (light or dark)' },
+        ...themes.filter((t) => offered.includes(t.value)).map((t) => ({ value: t.value, label: `${t.label} (${t.scheme})` })),
+    ];
+
+    return (
+        <>
+            <Checkbox.Group
+                label="Themes visitors can choose"
+                description="Every theme is checked for readable contrast. Offer at least one light and one dark theme if you want the “System” option."
+                value={offered}
+                onChange={(v) => set('themes', themes.map((t) => t.value).filter((key) => v.includes(key)))}
+                error={err('themes')}
+            >
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} mt="xs">
+                    {themes.map((t) => (
+                        <Checkbox key={t.value} value={t.value} label={`${t.label}`} description={t.scheme === 'dark' ? 'Dark' : 'Light'} />
+                    ))}
+                </SimpleGrid>
+            </Checkbox.Group>
+            <Select
+                label="Default theme"
+                description="What a first-time visitor sees."
+                data={defaultOptions}
+                value={data.default_theme}
+                onChange={(v) => v && set('default_theme', v)}
+                error={err('default_theme')}
+                allowDeselect={false}
+            />
+            <Switch
+                label="Show the theme picker in the header"
+                checked={Boolean(data.picker)}
+                onChange={(e) => set('picker', e.currentTarget.checked)}
+            />
+        </>
+    );
+}
+
+function LabelFields({ data, set, err, schema }: FieldProps & { schema: Props['labelSchema'] }) {
+    return (
+        <Stack gap="xl">
+            {schema.map((group) => (
+                <Stack key={group.key} gap="xs">
+                    <Text fw={600}>{group.title}</Text>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                        {group.fields.map((field) => (
+                            <TextInput
+                                key={field.key}
+                                label={field.label}
+                                placeholder={field.default}
+                                value={data[group.key]?.[field.key] ?? ''}
+                                onChange={(e) => set(group.key, { ...data[group.key], [field.key]: e.currentTarget.value })}
+                                error={err(`${group.key}.${field.key}`)}
+                            />
+                        ))}
+                    </SimpleGrid>
+                    <Divider />
+                </Stack>
+            ))}
+        </Stack>
+    );
+}
+
+function FileCard({ title, kind, file, accept, hint }: { title: string; kind: 'cv' | 'photo' | 'og_image'; file: FileInfo; accept: string; hint: ReactNode }) {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -294,7 +377,7 @@ function FileCard({ title, kind, file, accept, hint }: { title: string; kind: 'c
         <Card withBorder mb="lg">
             <Group justify="space-between" wrap="wrap">
                 <Group gap="sm" wrap="nowrap">
-                    {kind === 'cv' ? <FileText size={28} /> : <ImageUp size={28} />}
+                    {kind === 'photo' && file ? <Avatar src={file.url} alt="" size={44} radius="md" /> : kind === 'cv' ? <FileText size={28} /> : <ImageUp size={28} />}
                     <div>
                         <Text fw={600}>{title}</Text>
                         {file ? (
@@ -327,7 +410,13 @@ function FileCard({ title, kind, file, accept, hint }: { title: string; kind: 'c
                     {file && (
                         <ConfirmButton
                             title={`Remove ${title.toLowerCase()}?`}
-                            message={kind === 'cv' ? 'The Download CV buttons will disappear from the site.' : 'Shares will fall back to no image.'}
+                            message={
+                                kind === 'cv'
+                                    ? 'The Download CV buttons will disappear from the site.'
+                                    : kind === 'photo'
+                                      ? 'The site will show your initials instead.'
+                                      : 'Shares will fall back to no image.'
+                            }
                             confirmLabel="Remove"
                             onConfirm={(done) => router.delete(`/admin/files/${kind}`, { preserveScroll: true, onFinish: done })}
                         >
@@ -356,6 +445,8 @@ function withDefaults(group: Props['group'], value: Record<string, unknown>): Re
             return { items: [], ...v };
         case 'seo':
             return { title_template: '%s', default_title: '', description: '', ...v };
+        case 'appearance':
+            return { default_theme: 'dark', themes: ['dark', 'light'], picker: true, ...v };
         default:
             return { ...v };
     }

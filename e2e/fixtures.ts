@@ -22,14 +22,31 @@ export const test = base.extend<{ errors: string[] }>({
     ],
 });
 
-export type Theme = 'light' | 'dark';
-export const THEMES: Theme[] = ['light', 'dark'];
+/** The site's colour themes (App\\Support\\Themes). */
+export type Theme = 'dark' | 'light' | 'midnight' | 'aurora' | 'ember' | 'paper';
+/** Every page is tested in these two; all themes get an axe pass on the home page. */
+export const THEMES: Theme[] = ['dark', 'light'];
+export const ALL_THEMES: Theme[] = ['dark', 'light', 'midnight', 'aurora', 'ember', 'paper'];
+export const DARK_THEMES: Theme[] = ['dark', 'midnight', 'aurora', 'ember'];
 
-/** Opens a page in the given theme, the way a first-time visitor's OS would choose it. */
-export async function visit(page: Page, path: string, theme: Theme = 'light') {
-    await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+/**
+ * Opens a page in the given theme, as if the visitor had picked it before.
+ * Only set when nothing is saved yet, so a test can still switch and reload.
+ */
+export async function visit(page: Page, path: string, theme: Theme = 'dark') {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript((t) => {
+        try {
+            if (!localStorage.getItem('theme')) localStorage.setItem('theme', t);
+        } catch {
+            // Storage blocked: the site default applies.
+        }
+    }, theme);
     const response = await page.goto(path);
-    await expect(page.locator('html')).toHaveClass(theme === 'dark' ? /\bdark\b/ : /^(?!.*\bdark\b)/);
+    if (!path.startsWith('/admin')) {
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+        await expect(page.locator('html')).toHaveClass(DARK_THEMES.includes(theme) ? /\bdark\b/ : /^(?!.*\bdark\b)/);
+    }
     return response;
 }
 

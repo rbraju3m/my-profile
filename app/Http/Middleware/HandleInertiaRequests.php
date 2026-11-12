@@ -6,6 +6,8 @@ namespace App\Http\Middleware;
 
 use App\Models\ContactMessage;
 use App\Services\Settings;
+use App\Support\SiteLabels;
+use App\Support\Themes;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -48,6 +50,7 @@ final class HandleInertiaRequests extends Middleware
                 'socials' => $site['socials'] ?? [],
                 'availability' => $site['availability'] ?? ['enabled' => false, 'text' => ''],
                 'has_cv' => $this->settings->hasCv(),
+                'photo' => $this->settings->photo(),
                 /*
                  * Email and phone travel encoded and are decoded in the browser
                  * after hydration, so they never appear as plain text in the
@@ -61,6 +64,8 @@ final class HandleInertiaRequests extends Middleware
             ],
             'turnstileSiteKey' => config('services.turnstile.site_key') ?: null,
             'nav' => $this->settings->get('nav')['items'] ?? [],
+            'appearance' => app(Themes::class)->config(),
+            'labels' => SiteLabels::resolve($this->settings->get('labels')),
             'footer' => $this->settings->get('footer'),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

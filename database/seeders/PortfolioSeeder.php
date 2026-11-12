@@ -8,6 +8,7 @@ use App\Models\Diagram;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Project;
+use App\Models\Setting;
 use App\Models\SkillCategory;
 use App\Models\Specialization;
 use App\Models\Technology;
@@ -41,6 +42,14 @@ final class PortfolioSeeder extends Seeder
         DB::transaction(function () use ($data, $settings): void {
             foreach ($data['settings'] as $group => $value) {
                 $settings->put($group, $value);
+            }
+
+            // The portrait photo (database/seeders/data/photo.jpg), unless one was uploaded already.
+            // Not in unit tests: they seed before faking storage, so it would write to the real disk.
+            $site = Setting::query()->where('group', 'site')->firstOrFail();
+            if (! app()->runningUnitTests() && ! $site->hasMedia('photo') && is_file(__DIR__.'/data/photo.jpg')) {
+                $site->addMedia(__DIR__.'/data/photo.jpg')->preservingOriginal()->usingFileName('photo.jpg')->toMediaCollection('photo');
+                $settings->flush();
             }
 
             $categories = [];

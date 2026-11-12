@@ -25,7 +25,10 @@ export function Section({ id, copy, children, className, action }: Props) {
                     <Reveal className="mb-10 flex flex-col gap-4 sm:mb-14 sm:flex-row sm:items-end sm:justify-between">
                         <div className="max-w-2xl">
                             {copy.eyebrow && (
-                                <p className="mb-3 font-mono text-xs font-medium tracking-widest text-accent uppercase">{copy.eyebrow}</p>
+                                <p className="mb-3 flex items-center gap-2 font-mono text-xs font-medium tracking-widest text-accent uppercase">
+                                    <span aria-hidden="true" className="eyebrow-line h-px w-6 bg-accent" />
+                                    {copy.eyebrow}
+                                </p>
                             )}
                             <h2 id={headingId} className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                                 {copy.heading}

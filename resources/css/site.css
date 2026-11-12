@@ -11,10 +11,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design tokens. Light values here, dark values under `.dark`.
- * Text/background pairs are WCAG AA (≥ 4.5:1) in both themes.
+ * Design tokens, one block per theme (App\Support\Themes lists them; the admin
+ * picks the default). The pre-paint script sets `data-theme` on <html>, plus
+ * `.dark` for dark-scheme themes. Being attribute selectors, the same blocks
+ * also restyle a single element, which is how the theme picker shows swatches.
+ * Every text/background pair is WCAG AA (≥ 4.5:1) in every theme.
  */
-:root {
+:root,
+[data-theme='light'] {
     --bg: #fafaf9;
     --surface: #ffffff;
     --surface-2: #f4f4f5;
@@ -33,7 +37,7 @@
     --grid-line: rgb(11 13 16 / 0.04);
 }
 
-.dark {
+[data-theme='dark'] {
     --bg: #0a0b0d;
     --surface: #111317;
     --surface-2: #171a1f;
@@ -50,6 +54,82 @@
     --in-development: #fbbf24;
     --research: #c4b5fd;
     --grid-line: rgb(237 238 240 / 0.035);
+}
+
+[data-theme='midnight'] {
+    --bg: #0b1020;
+    --surface: #10172b;
+    --surface-2: #162038;
+    --border: #222d4a;
+    --border-strong: #2d3a5e;
+    --text: #e8edf9;
+    --muted: #9ba8c8;
+    --accent: #7dd3fc;
+    --accent-strong: #bae6fd;
+    --accent-contrast: #082f49;
+    --accent-glow: rgb(125 211 252 / 0.13);
+    --live: #4ade80;
+    --built: #93c5fd;
+    --in-development: #fbbf24;
+    --research: #c4b5fd;
+    --grid-line: rgb(232 237 249 / 0.04);
+}
+
+[data-theme='aurora'] {
+    --bg: #0e0b16;
+    --surface: #15111f;
+    --surface-2: #1c1729;
+    --border: #2a2340;
+    --border-strong: #372e52;
+    --text: #efeaf8;
+    --muted: #a69dbb;
+    --accent: #c4b5fd;
+    --accent-strong: #ddd6fe;
+    --accent-contrast: #2e1065;
+    --accent-glow: rgb(196 181 253 / 0.14);
+    --live: #4ade80;
+    --built: #60a5fa;
+    --in-development: #fbbf24;
+    --research: #f0abfc;
+    --grid-line: rgb(239 234 248 / 0.04);
+}
+
+[data-theme='ember'] {
+    --bg: #100d0a;
+    --surface: #181410;
+    --surface-2: #201b16;
+    --border: #2f2820;
+    --border-strong: #3d342a;
+    --text: #f4efe8;
+    --muted: #ada395;
+    --accent: #fbbf24;
+    --accent-strong: #fcd34d;
+    --accent-contrast: #422006;
+    --accent-glow: rgb(251 191 36 / 0.11);
+    --live: #4ade80;
+    --built: #60a5fa;
+    --in-development: #fb923c;
+    --research: #c4b5fd;
+    --grid-line: rgb(244 239 232 / 0.035);
+}
+
+[data-theme='paper'] {
+    --bg: #f7f4ee;
+    --surface: #fffdf8;
+    --surface-2: #f0ebe1;
+    --border: #e3dccf;
+    --border-strong: #d3c9b8;
+    --text: #1c1814;
+    --muted: #5c544a;
+    --accent: #9a4108;
+    --accent-strong: #7c3406;
+    --accent-contrast: #ffffff;
+    --accent-glow: rgb(180 83 9 / 0.09);
+    --live: #166534;
+    --built: #1d4ed8;
+    --in-development: #9a3412;
+    --research: #6d28d9;
+    --grid-line: rgb(28 24 20 / 0.045);
 }
 
 @theme inline {
@@ -174,5 +254,314 @@
     }
     50% {
         opacity: 0.35;
+    }
+}
+
+/* ------------------------------------------------------------------------
+ * Motion and interaction. CSS only (plus the pointer variables written by
+ * lib/pointerEffects.ts), so nothing here adds to the bundle. Every effect is
+ * limited to visitors without a reduced-motion preference, and only transform,
+ * opacity and filters are animated, so nothing shifts the layout.
+ * ---------------------------------------------------------------------- */
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+}
+
+@keyframes drift {
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+    50% {
+        transform: translate(6%, 28px);
+    }
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes scan {
+    0%,
+    100% {
+        opacity: 0;
+    }
+    6%,
+    26% {
+        opacity: 1;
+    }
+    36% {
+        opacity: 0;
+    }
+}
+
+@keyframes grow-x {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes grow-y {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes ping-once {
+    from {
+        box-shadow: 0 0 0 0 var(--accent);
+    }
+    to {
+        box-shadow: 0 0 0 10px transparent;
+    }
+}
+
+@keyframes icon-in {
+    from {
+        opacity: 0;
+        transform: rotate(-120deg) scale(0.5);
+    }
+}
+
+/* Hidden by default: only browsers with scroll-driven animations show it. */
+.scroll-progress {
+    display: none;
+}
+
+.map-scan {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(90deg, var(--accent-glow), transparent 85%);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Hero: content rises in on load, in sequence (--i). Pure CSS, so it plays
+       before hydration and never leaves anything hidden. */
+    .hero-enter {
+        animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--i, 0) * 90ms + 60ms);
+    }
+
+    /* Translate only, on its own layer: the blur is drawn once and moved, not redrawn every frame. */
+    .hero-drift {
+        animation: drift 14s ease-in-out infinite;
+        will-change: transform;
+    }
+
+    .hero-drift-alt {
+        animation-duration: 18s;
+        animation-direction: reverse;
+    }
+
+    .map-caret {
+        animation: blink 1.1s steps(1) infinite;
+    }
+
+    .map-scan {
+        animation: scan calc(var(--n, 3) * 2.2s) ease-in-out infinite;
+        animation-delay: calc(var(--i, 0) * 2.2s + 1.2s);
+    }
+
+    .theme-icon {
+        animation: icon-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Section eyebrows: the short line sweeps in with the heading. */
+    [data-reveal] .eyebrow-line {
+        transform-origin: left;
+        transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+    }
+
+    .js [data-reveal]:not([data-revealed]) .eyebrow-line {
+        transform: scaleX(0);
+    }
+
+    /* Children of [data-stagger] pop in one after another (--i) once revealed. */
+    [data-reveal] [data-stagger] > * {
+        transition:
+            opacity 0.4s ease,
+            transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+            background-color 0.15s,
+            color 0.15s;
+        transition-delay: calc(var(--reveal-delay, 0s) + 0.15s + var(--i, 0) * 35ms), calc(var(--reveal-delay, 0s) + 0.15s + var(--i, 0) * 35ms), 0s, 0s;
+    }
+
+    .js [data-reveal]:not([data-revealed]) [data-stagger] > * {
+        opacity: 0;
+        transform: translateY(6px) scale(0.9);
+    }
+
+    /* Timeline dots ping once as their job scrolls into view. */
+    [data-revealed] .timeline-dot {
+        animation: ping-once 1.2s ease-out both;
+        animation-delay: calc(var(--i, 0) * 0.25s + 0.3s);
+    }
+
+    /* Primary buttons: a light sweep on hover. */
+    .btn-shine {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .btn-shine::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+        transform: translateX(-120%);
+        transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .btn-shine:hover::after {
+        transform: translateX(120%);
+    }
+}
+
+/* Reading progress bar and the timeline line that draws itself, driven by
+   scroll position. Browsers without scroll timelines keep the static line. */
+@supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .scroll-progress {
+            display: block;
+            position: fixed;
+            inset: 0 0 auto;
+            z-index: 50;
+            height: 2px;
+            pointer-events: none;
+            background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+            transform-origin: left;
+            animation: grow-x linear both;
+            animation-timeline: scroll(root);
+        }
+
+        .timeline-fill {
+            transform-origin: top;
+            animation: grow-y linear both;
+            animation-timeline: view();
+            animation-range: entry 15% cover 60%;
+        }
+    }
+}
+
+/* Without scroll timelines (or with reduced motion) there is no fill line. */
+@supports not (animation-timeline: scroll()) {
+    .timeline-fill {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .timeline-fill {
+        display: none;
+    }
+}
+
+/* Cursor effects for mouse and trackpad users (variables from lib/pointerEffects.ts). */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    [data-spotlight] {
+        isolation: isolate;
+    }
+
+    /* A soft glow that follows the cursor... */
+    [data-spotlight]::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        background: radial-gradient(var(--spot-size, 320px) circle at var(--mx, 50%) var(--my, 50%), var(--accent-glow), transparent 70%);
+    }
+
+    /* ...and lights up the border near it (cards only; the hero has no border). */
+    [data-spotlight]:not(section)::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        padding: 1px;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), var(--accent), transparent 70%);
+        mask:
+            linear-gradient(#000 0 0) content-box exclude,
+            linear-gradient(#000 0 0);
+    }
+
+    [data-spotlight]:hover::before,
+    [data-spotlight]:hover::after {
+        opacity: 1;
+    }
+
+    [data-tilt] {
+        transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+        transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+/* Theme switch: the new theme grows out of the toggle as a circle (lib/useTheme.ts). */
+.theme-transition::view-transition-old(root),
+.theme-transition::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Photo: a turning accent ring round the hero avatar, and an offset frame
+   behind the About portrait that slides out on hover. */
+@property --ring-angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+
+@keyframes ring-turn {
+    to {
+        --ring-angle: 360deg;
+    }
+}
+
+.avatar-ring {
+    background: conic-gradient(from var(--ring-angle), var(--accent), transparent 35%, transparent 65%, var(--accent));
+}
+
+.portrait-frame {
+    transform: translate(10px, 10px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .avatar-ring {
+        animation: ring-turn 6s linear infinite;
+    }
+
+    .portrait-frame {
+        transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .portrait:hover .portrait-frame {
+        transform: translate(16px, 16px);
     }
 }
