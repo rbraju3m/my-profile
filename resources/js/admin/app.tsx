@@ -14,7 +14,7 @@ import { theme } from './theme';
 void createInertiaApp({
     title: (title) => (title ? `${title} · Admin` : 'Admin'),
     resolve: async (name) => {
-        const pages = import.meta.glob<{ default: ResolvedComponent }>('../pages/Admin/**/*.tsx');
+        const pages = import.meta.glob<{ default: ResolvedComponent }>(['../pages/Admin/**/*.tsx', '!**/*.test.tsx']);
         const page = pages[`../pages/${name}.tsx`];
 
         if (page === undefined) {

@@ -1,28 +1,48 @@
-import { domAnimation, LazyMotion, m, useReducedMotion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 
-/**
- * Fades content up 8px the first time it scrolls into view.
- * Renders a plain div when the visitor prefers reduced motion.
+/*
+ * One observer for every Reveal on the page. The animation itself is a CSS
+ * transition on opacity/transform (see [data-reveal] in site.css), so it runs
+ * off the main thread and needs no animation library.
  */
-export function Reveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-    const reduce = useReducedMotion();
+let observer: IntersectionObserver | null = null;
 
-    if (reduce) {
-        return <div className={className}>{children}</div>;
+function observe(el: HTMLElement): () => void {
+    if (typeof IntersectionObserver === 'undefined') {
+        el.dataset.revealed = '';
+        return () => {};
     }
 
+    observer ??= new IntersectionObserver(
+        (entries) => {
+            for (const entry of entries) {
+                // In view, or already scrolled past (e.g. it hydrated late, or the visit started at #contact).
+                if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
+                    (entry.target as HTMLElement).dataset.revealed = '';
+                    observer?.unobserve(entry.target);
+                }
+            }
+        },
+        { rootMargin: '0px 0px -60px 0px' },
+    );
+    observer.observe(el);
+
+    return () => observer?.unobserve(el);
+}
+
+/**
+ * Fades content up 8px the first time it scrolls into view. Content is only
+ * hidden once JavaScript is running (the `js` class from the pre-paint script),
+ * and never for visitors who prefer reduced motion.
+ */
+export function Reveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => (ref.current ? observe(ref.current) : undefined), []);
+
     return (
-        <LazyMotion features={domAnimation} strict>
-            <m.div
-                className={className}
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay }}
-            >
-                {children}
-            </m.div>
-        </LazyMotion>
+        <div ref={ref} data-reveal="" className={className} style={delay ? ({ '--reveal-delay': `${delay}s` } as CSSProperties) : undefined}>
+            {children}
+        </div>
     );
 }

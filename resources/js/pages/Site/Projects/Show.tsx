@@ -145,7 +145,7 @@ export default function ProjectShow({ project, previous, next }: Props) {
                                         <div key={m.label} className="flex flex-col-reverse p-4">
                                             <dt className="mt-0.5 text-xs text-muted">
                                                 {m.label}
-                                                {m.source && <span className="mt-1 block text-[11px] text-muted/80">{m.source}</span>}
+                                                {m.source && <span className="mt-1 block text-[11px] text-muted">{m.source}</span>}
                                             </dt>
                                             <dd className="font-mono text-xl font-semibold tracking-tight">{m.value}</dd>
                                         </div>

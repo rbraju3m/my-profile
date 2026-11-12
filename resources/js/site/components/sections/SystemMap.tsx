@@ -20,7 +20,7 @@ export function SystemMap({ flows }: { flows: HeroContent['flows'] }) {
             </div>
             <ul className="divide-y divide-border">
                 {flows.map((flow, i) => (
-                    <li key={flow.project}>
+                    <li key={`${i}-${flow.project}`}>
                         <Link
                             href={`/projects/${flow.project}`}
                             className="group block rounded-xl px-3 py-4 transition-colors hover:bg-surface-2 sm:px-4"
@@ -34,7 +34,7 @@ export function SystemMap({ flows }: { flows: HeroContent['flows'] }) {
                             </div>
                             <ol className="mt-3 flex items-center" aria-label={`${flow.label}: ${flow.steps.join(', then ')}`}>
                                 {flow.steps.map((step, s) => (
-                                    <li key={step} className="flex min-w-0 flex-1 items-center last:flex-none">
+                                    <li key={`${s}-${step}`} className="flex min-w-0 flex-1 items-center last:flex-none">
                                         <span className="truncate rounded-md border border-border bg-bg px-2 py-1 text-[11px] font-medium sm:text-xs">
                                             {step}
                                         </span>

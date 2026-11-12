@@ -29,3 +29,9 @@ Thumbs.db
 
 # Internal research notes about private employer repos; keep local only
 /docs/phase-1-discovery.md
+
+# Browser tests
+/database/e2e.sqlite
+/test-results
+/playwright-report
+/.lighthouseci

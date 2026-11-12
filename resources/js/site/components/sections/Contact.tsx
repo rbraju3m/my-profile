@@ -1,27 +1,19 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { CheckCircle2, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { z } from 'zod';
 
 import type { SectionCopy, SharedProps } from '@/shared/types';
 
 import { cn } from '../../lib/cn';
 import { useDecoded } from '../../lib/useDecoded';
+import { validateContact, type ContactFields } from '../../lib/validateContact';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { Reveal } from '../ui/Reveal';
 import { Section } from '../ui/Section';
 import { Turnstile } from './Turnstile';
 
-/* Mirrors App\Http\Requests\Site\ContactMessageRequest, which stays the authority. */
-const schema = z.object({
-    name: z.string().trim().min(2, 'Please enter your name.').max(120),
-    email: z.string().trim().email('Please enter a valid email address.').max(190),
-    subject: z.string().trim().min(3, 'Please add a short subject.').max(160),
-    message: z.string().trim().min(20, 'Please write at least 20 characters so I know how to help.').max(5000),
-});
-
-type Fields = z.infer<typeof schema> & { website: string; 'cf-turnstile-response': string };
+type Fields = ContactFields & { website: string; 'cf-turnstile-response': string };
 
 export function Contact({ copy }: { copy: SectionCopy }) {
     const { site, flash, turnstileSiteKey } = usePage<SharedProps & { turnstileSiteKey: string | null }>().props;
@@ -39,13 +31,11 @@ export function Contact({ copy }: { copy: SectionCopy }) {
         e.preventDefault();
         form.clearErrors();
 
-        const result = schema.safeParse(form.data);
-        if (!result.success) {
-            for (const issue of result.error.issues) {
-                form.setError(issue.path[0] as keyof Fields, issue.message);
-            }
-            const first = result.error.issues[0]?.path[0];
-            if (typeof first === 'string') document.getElementById(`contact-${first}`)?.focus();
+        const invalid = validateContact(form.data);
+        const fields = Object.keys(invalid) as (keyof ContactFields)[];
+        if (fields.length > 0) {
+            for (const field of fields) form.setError(field, invalid[field]!);
+            document.getElementById(`contact-${fields[0]}`)?.focus();
             return;
         }
 

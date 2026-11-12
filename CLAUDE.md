@@ -25,9 +25,16 @@ vendor/bin/pint                      # PHP style
 npm test                             # Vitest
 npx vitest run resources/js/site/lib/filterProjects.test.ts   # single file
 npm run typecheck && npm run lint
+
+npm run build && npm run e2e         # Playwright: 6 browser/screen setups, light+dark, axe; own DB (database/e2e.sqlite), :8124, SSR :13715
+npx playwright test e2e/public.spec.ts --project=chromium-desktop   # one file, one browser
+CHROME_PATH=... npm run lighthouse   # Lighthouse CI budgets (lighthouserc.cjs)
+scripts/e2e-server.sh                # the e2e/Lighthouse server by hand
 ```
 
-CI (`.github/workflows/ci.yml`) runs Pint, Larastan, Pest, tsc, ESLint, Vitest and the build.
+CI (`.github/workflows/ci.yml`) runs Pint, Larastan, Pest, tsc, ESLint, Vitest and the build, checks that no test code is in the bundles, then a `browser` job runs Playwright and Lighthouse. Phase 5 results: `docs/phase-5-testing.md`.
+
+Test files (`*.test.tsx`) may sit next to pages: the page globs in `site/app.tsx`, `site/ssr.tsx` and `admin/app.tsx` exclude them. Keep that exclusion in any new glob.
 
 TypeScript is pinned to `~6.0` because typescript-eslint does not support TS 7.
 
@@ -49,7 +56,9 @@ TypeScript is pinned to `~6.0` because typescript-eslint does not support TS 7.
 **Pages** live in one tree, `resources/js/pages/{Site,Admin}`, with Inertia component names `Site/...` and `Admin/...`. Each Vite entry globs only its own half, so the site bundle never contains admin code.
 
 **Frontend:**
-- `resources/js/site/` is the public bundle: Tailwind 4, design tokens as CSS variables in `resources/css/site.css`, and dark mode via a `.dark` class set by a pre-paint script.
+- `resources/js/site/` is the public bundle: Tailwind 4, design tokens as CSS variables in `resources/css/site.css`, and dark mode via a `.dark` class set by a pre-paint script (which also adds `.js`). Keep this bundle lean: scroll reveals are CSS (`[data-reveal]`), and contact validation is the hand-written `validateContact` (no animation or schema libraries).
+- The home page hydrates progressively: sections below the fold are wrapped in `<Deferred>` (`site/components/Deferred.tsx`) and hydrate near the viewport, and `app.tsx` hydrates inside `startTransition`. Wrap one section element per `<Deferred>` and give it plain JSON props: `Deferred` compares props to skip Inertia's identical re-render, because any re-render of a section that isn't hydrated yet discards its server HTML. Never defer a section with form inputs, since text typed before hydration would be lost.
+- Public error pages (404, 500, ...) are `Site/Error`, rendered by `App\Support\SiteErrorPage` from `bootstrap/app.php`. It uses no shared props, since it can run before any middleware.
 - `resources/js/shared/types.ts` mirrors the PHP prop shapes.
 - Diagrams are data (nodes on a column/row grid, plus edges). `components/diagrams/layout.ts` is a pure, tested router. `FlowDiagram` draws SVG on `lg+` screens and a step list below that.
 - `resources/js/admin/` is the admin bundle: Mantine 9, TipTap and dnd-kit. `/admin/*` is client-rendered: it is excluded from SSR, and its root view (`admin.blade.php`) is chosen in `HandleInertiaRequests::rootView`. The diagram editor's live preview reuses the site's `FlowDiagram`, styled through `resources/css/admin-preview.css`, which loads Tailwind utilities without preflight, scoped to `.site-preview`.

@@ -42,11 +42,13 @@ export function Nav({ onHome }: { onHome: boolean }) {
             )}
         >
             <Container className="flex h-16 items-center justify-between gap-4">
-                <Link href="/" className="group flex items-center gap-2.5 rounded-md" aria-label={`${site.name}, home`}>
-                    <span className="grid size-8 place-items-center rounded-lg border border-border bg-surface font-mono text-xs font-bold text-accent transition-colors group-hover:border-accent">
+                <Link href="/" className="group flex items-center gap-2.5 rounded-md">
+                    <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg border border-border bg-surface font-mono text-xs font-bold text-accent transition-colors group-hover:border-accent">
                         {initials(site.name)}
                     </span>
-                    <span className="hidden text-sm font-semibold sm:block">{site.name}</span>
+                    {/* The accessible name starts with the visible text (WCAG 2.5.3). */}
+                    <span className="sr-only text-sm font-semibold sm:not-sr-only">{site.name}</span>
+                    <span className="sr-only">, home</span>
                 </Link>
 
                 <nav aria-label="Primary" className="hidden md:block">

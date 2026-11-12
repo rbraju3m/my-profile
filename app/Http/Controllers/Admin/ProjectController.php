@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\ProjectRequest;
 use App\Models\Diagram;
 use App\Models\Project;
 use App\Models\Technology;
+use App\Services\Settings;
 use App\Support\RichText;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -99,6 +100,7 @@ final class ProjectController extends Controller
     private function fill(Project $project, ProjectRequest $request): void
     {
         $data = $request->validated();
+        $oldSlug = $project->exists ? $project->getOriginal('slug') : null;
 
         $project->fill([
             ...collect($data)->except(['published', 'technologies', 'diagrams', 'contribution', 'seo'])->all(),
@@ -113,6 +115,26 @@ final class ProjectController extends Controller
         }
         $project->technologies()->sync($tech);
         $project->diagrams()->sync($data['diagrams']);
+
+        if (is_string($oldSlug) && $oldSlug !== $project->slug) {
+            $this->renameInHeroFlows($oldSlug, $project->slug);
+        }
+    }
+
+    /** The hero's system map links to projects by slug; keep those links working after a rename. */
+    private function renameInHeroFlows(string $from, string $to): void
+    {
+        $settings = app(Settings::class);
+        $hero = $settings->get('hero');
+        if (! is_array($hero['flows'] ?? null)) {
+            return;
+        }
+
+        $hero['flows'] = array_map(
+            fn (mixed $flow): mixed => is_array($flow) && ($flow['project'] ?? null) === $from ? [...$flow, 'project' => $to] : $flow,
+            $hero['flows'],
+        );
+        $settings->put('hero', $hero);
     }
 
     /** @return array<string, mixed> */

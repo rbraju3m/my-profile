@@ -1,12 +1,13 @@
 import '../../css/site.css';
 
 import { createInertiaApp, type ResolvedComponent } from '@inertiajs/react';
+import { startTransition } from 'react';
 import { hydrateRoot, createRoot } from 'react-dom/client';
 
 void createInertiaApp({
     title: (title) => title,
     resolve: async (name) => {
-        const pages = import.meta.glob<{ default: ResolvedComponent }>('../pages/Site/**/*.tsx');
+        const pages = import.meta.glob<{ default: ResolvedComponent }>(['../pages/Site/**/*.tsx', '!**/*.test.tsx']);
         const page = pages[`../pages/${name}.tsx`];
 
         if (page === undefined) {
@@ -18,7 +19,10 @@ void createInertiaApp({
     setup({ el, App, props }) {
         // Hydrate server-rendered markup; fall back to a client render when SSR is off (local dev).
         if (el.hasChildNodes()) {
-            hydrateRoot(el, <App {...props} />);
+            // As a transition, hydration yields to the browser instead of blocking it in one long task.
+            startTransition(() => {
+                hydrateRoot(el, <App {...props} />);
+            });
         } else {
             createRoot(el).render(<App {...props} />);
         }

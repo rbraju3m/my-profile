@@ -24,7 +24,9 @@ export function PageHeader({ title, description, actions, crumbs }: { title: str
             )}
             <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
                 <div>
-                    <Title order={2}>{title}</Title>
+                    <Title order={1} size="h2">
+                        {title}
+                    </Title>
                     {description && (
                         <Text c="dimmed" size="sm" mt={4} maw={680}>
                             {description}

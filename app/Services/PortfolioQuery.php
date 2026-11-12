@@ -26,6 +26,26 @@ final class PortfolioQuery
 {
     public function __construct(private readonly Settings $settings) {}
 
+    /**
+     * Hero content, with system-map flows whose project is unpublished or gone
+     * left out, so the hero never links to a 404.
+     *
+     * @param  list<string>  $publishedSlugs
+     * @return array<string, mixed>
+     */
+    private function hero(array $publishedSlugs): array
+    {
+        $hero = $this->settings->get('hero');
+        if (is_array($hero['flows'] ?? null)) {
+            $hero['flows'] = array_values(array_filter(
+                $hero['flows'],
+                fn (mixed $flow): bool => is_array($flow) && in_array($flow['project'] ?? null, $publishedSlugs, true),
+            ));
+        }
+
+        return $hero;
+    }
+
     /** @return array<string, mixed> */
     public function home(): array
     {
@@ -34,7 +54,7 @@ final class PortfolioQuery
             ->get();
 
         return [
-            'hero' => $this->settings->get('hero'),
+            'hero' => $this->hero($projects->pluck('slug')->all()),
             'about' => $this->settings->get('about'),
             'sections' => $this->settings->get('sections'),
             'skills' => $this->skills(),

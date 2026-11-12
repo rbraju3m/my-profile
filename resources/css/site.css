@@ -146,6 +146,21 @@
     }
 }
 
+/* Scroll reveal (components/ui/Reveal.tsx). Hidden only once JS runs, so content
+   never stays invisible if the bundle fails; skipped for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+    [data-reveal] {
+        transition:
+            opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+            transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+    }
+
+    .js [data-reveal]:not([data-revealed]) {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
 @keyframes flow-dash {
     to {
         stroke-dashoffset: -20;

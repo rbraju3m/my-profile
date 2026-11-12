@@ -13,13 +13,23 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
  */
 final class RichText
 {
+    private const UNWRAP = ['b', 'i', 'u', 's', 'strike', 'del', 'ins', 'mark', 'span', 'small', 'sub', 'sup', 'div', 'section', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'font'];
+
     public static function clean(?string $html): ?string
     {
         if ($html === null || trim(strip_tags($html)) === '') {
             return null;
         }
 
-        $config = (new HtmlSanitizerConfig)
+        $config = new HtmlSanitizerConfig;
+        // Other formatting (TipTap's underline/strike shortcuts, pasted
+        // headings or spans) loses its tag but keeps its text. Anything not
+        // listed (script, style, iframe...) is dropped whole.
+        foreach (self::UNWRAP as $element) {
+            $config = $config->blockElement($element);
+        }
+
+        $config = $config
             ->allowElement('p')
             ->allowElement('br')
             ->allowElement('strong')

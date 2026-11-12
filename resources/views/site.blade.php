@@ -29,6 +29,11 @@
             <script type="application/ld+json">{!! json_encode(array_filter($document, fn ($v) => $v !== null), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
         @endforeach
     @endisset
+    @isset($errorPage)
+        <title data-inertia>{{ $errorPage['title'] }}</title>
+        <meta name="description" content="{{ $errorPage['description'] }}" data-inertia="description">
+        <meta name="robots" content="noindex">
+    @endisset
 
     <meta name="theme-color" content="#0A0B0D" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
@@ -36,6 +41,7 @@
 
     {{-- Runs before first paint so the wrong theme never flashes. --}}
     <script nonce="{{ Vite::cspNonce() }}">
+        document.documentElement.classList.add('js');
         try {
             var t = localStorage.getItem('theme');
             var dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);

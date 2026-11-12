@@ -142,7 +142,7 @@ function ChipGroup({
     after?: React.ReactNode;
 }) {
     return (
-        <fieldset className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+        <fieldset className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
             <legend className="float-left w-24 shrink-0 pt-2 font-mono text-[11px] tracking-wider text-muted uppercase">{label}</legend>
             <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
                 {options.map((option) => {
