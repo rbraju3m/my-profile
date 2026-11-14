@@ -62,3 +62,9 @@
         stroke-dashoffset: -20;
     }
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .site-preview .flow-packet {
+        display: none;
+    }
+}

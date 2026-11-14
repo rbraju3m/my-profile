@@ -57,7 +57,7 @@ export type Labels = {
         string
     >;
     footer: Record<'navigate' | 'elsewhere' | 'all_projects', string>;
-    diagram: Record<'device' | 'service' | 'queue' | 'storage' | 'user' | 'external' | 'async', string>;
+    diagram: Record<'device' | 'service' | 'queue' | 'storage' | 'user' | 'external' | 'async' | 'sync_legend' | 'async_legend' | 'hint', string>;
 };
 
 export type SharedProps = {

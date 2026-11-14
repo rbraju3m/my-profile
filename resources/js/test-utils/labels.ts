@@ -78,5 +78,8 @@ export const labels: Labels = {
         user: "People",
         external: "External",
         async: "(asynchronous)",
+        sync_legend: "Direct call",
+        async_legend: "Asynchronous",
+        hint: "Hover a component to trace its connections",
     },
 };

@@ -241,6 +241,13 @@
     }
 }
 
+/* Packets travelling along diagram edges (components/diagrams/FlowDiagram.tsx). */
+@media (prefers-reduced-motion: reduce) {
+    .flow-packet {
+        display: none;
+    }
+}
+
 @keyframes flow-dash {
     to {
         stroke-dashoffset: -20;

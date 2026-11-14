@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import type { Diagram } from '@/shared/types';
@@ -52,6 +52,30 @@ describe('FlowDiagram', () => {
             </>,
         );
         const ids = [...container.querySelectorAll('marker')].map((m) => m.id);
-        expect(new Set(ids).size).toBe(2);
+        expect(ids.length).toBeGreaterThan(0);
+        expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('highlights a hovered component and its connections, and dims the rest', () => {
+        const { container } = render(<FlowDiagram diagram={diagram} />);
+        const svg = container.querySelector('svg[role="img"]') as SVGSVGElement;
+        const analyzer = within(svg as unknown as HTMLElement).getByText('Analyzer').closest('div[style]') as HTMLElement;
+
+        fireEvent.mouseEnter(analyzer);
+
+        const edgeGroups = [...svg.querySelectorAll('g[opacity]')];
+        expect(edgeGroups.map((g) => g.getAttribute('opacity'))).toEqual(['1', '0.18']);
+        expect(within(svg as unknown as HTMLElement).getByText('HMS').closest('div[style]')).toHaveClass('opacity-35');
+
+        fireEvent.mouseLeave(svg);
+        expect([...svg.querySelectorAll('g[opacity]')].every((g) => g.getAttribute('opacity') === '1')).toBe(true);
+    });
+
+    it('shows a legend of the node types and line styles in use', () => {
+        const { container } = render(<FlowDiagram diagram={diagram} />);
+        const legend = container.querySelector('.border-t') as HTMLElement;
+
+        expect(legend).toHaveTextContent(/Device.*Service.*Direct call.*Asynchronous/);
+        expect(legend).not.toHaveTextContent('People');
     });
 });

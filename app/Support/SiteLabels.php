@@ -92,6 +92,9 @@ final class SiteLabels
             'user' => ['Node type: people', 'People'],
             'external' => ['Node type: external', 'External'],
             'async' => ['Asynchronous step note', '(asynchronous)'],
+            'sync_legend' => ['Legend: solid line', 'Direct call'],
+            'async_legend' => ['Legend: dashed line', 'Asynchronous'],
+            'hint' => ['Hint below wide diagrams', 'Hover a component to trace its connections'],
         ]],
     ];
 
