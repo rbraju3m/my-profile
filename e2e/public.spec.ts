@@ -184,7 +184,10 @@ test('security headers and a CSP nonce reach the browser, also from the page cac
     }
 });
 
-test('every section of the home page becomes visible and interactive as you scroll', async ({ page }) => {
+test('every section of the home page becomes visible and interactive as you scroll', async ({ page, isMobile }) => {
+    // On phones the page is ~19,000px tall, so the 300px scroll steps alone take
+    // ~25 s on a busy machine: triple the timeout there (test.slow).
+    test.slow(isMobile, 'long page on phone screens: many scroll steps');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/');
 
