@@ -51,6 +51,36 @@ describe('installPointerEffects', () => {
         uninstall();
     });
 
+    it('pulls magnetic elements toward the cursor, sets parallax and honours a per-element tilt', () => {
+        media({ '(pointer: fine)': true });
+        const frames: FrameRequestCallback[] = [];
+        vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => frames.push(cb));
+        const flush = () => frames.splice(0).forEach((cb) => cb(0));
+        document.body.innerHTML = '<section data-parallax><a data-magnetic>go</a><div data-tilt="2"><i>x</i></div></section>';
+        const section = document.querySelector<HTMLElement>('section')!;
+        const button = document.querySelector<HTMLElement>('a')!;
+        const card = document.querySelector<HTMLElement>('[data-tilt]')!;
+        box(section, { left: 0, top: 0, width: 1000, height: 500 });
+        box(button, { left: 100, top: 100, width: 100, height: 40 });
+        box(card, { left: 500, top: 100, width: 200, height: 100 });
+
+        const uninstall = installPointerEffects();
+        move(button, 190, 120); // 40px right of centre, at the vertical centre
+        flush();
+
+        expect(button.style.getPropertyValue('--tx')).toBe('10.0px'); // 40 × 0.3 = 12, capped at 10
+        expect(button.style.getPropertyValue('--ty')).toBe('0.0px');
+        expect(section.style.getPropertyValue('--px')).toBe('-0.620');
+        expect(section.style.getPropertyValue('--py')).toBe('-0.520');
+
+        move(document.querySelector('i')!, 700, 150);
+        flush();
+        expect(button.style.getPropertyValue('--tx')).toBe('0px');
+        expect(card.style.getPropertyValue('--ry')).toBe('2.00deg');
+
+        uninstall();
+    });
+
     it('does nothing for touch screens or reduced motion', () => {
         for (const queries of [{}, { '(pointer: fine)': true, '(prefers-reduced-motion: reduce)': true }]) {
             media(queries);

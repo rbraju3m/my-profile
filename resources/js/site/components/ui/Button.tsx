@@ -23,18 +23,21 @@ type Props = {
     type?: 'button' | 'submit';
     disabled?: boolean;
     onClick?: () => void;
+    /** Leans toward the cursor (lib/pointerEffects.ts). */
+    magnetic?: boolean;
 };
 
 /**
  * Renders an Inertia link for internal pages, a plain anchor for hashes,
  * downloads and external URLs, or a button.
  */
-export function Button({ href, variant = 'primary', children, className, download, type = 'button', disabled, onClick }: Props) {
+export function Button({ href, variant = 'primary', children, className, download, type = 'button', disabled, onClick, magnetic = false }: Props) {
     const classes = cn(base, styles[variant], className);
+    const extra = magnetic ? { 'data-magnetic': '' } : {};
 
     if (href === undefined) {
         return (
-            <button type={type} className={classes} disabled={disabled} onClick={onClick}>
+            <button type={type} className={classes} disabled={disabled} onClick={onClick} {...extra}>
                 {children}
             </button>
         );
@@ -46,14 +49,14 @@ export function Button({ href, variant = 'primary', children, className, downloa
         const external = href.startsWith('http');
 
         return (
-            <a href={href} className={classes} download={download || undefined} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+            <a href={href} className={classes} download={download || undefined} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} {...extra}>
                 {children}
             </a>
         );
     }
 
     return (
-        <Link href={href} className={classes}>
+        <Link href={href} className={classes} {...extra}>
             {children}
         </Link>
     );

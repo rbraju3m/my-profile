@@ -13,16 +13,17 @@ import { Skills } from '@/site/components/sections/Skills';
 
 export default function Home(props: HomeProps) {
     const { sections } = props;
+    const allProjects = [...props.featuredProjects, ...props.otherProjects];
 
     return (
         <Layout onHome>
             {/* Above the fold: hydrated at once. The rest hydrates as it nears the viewport. */}
-            <Hero hero={props.hero} />
+            <Hero hero={props.hero} stats={props.stats} />
             <Deferred>
                 <About about={props.about} education={props.education} />
             </Deferred>
             <Deferred>
-                <Skills copy={sections.skills} skills={props.skills} />
+                <Skills copy={sections.skills} skills={props.skills} projects={allProjects} experiences={props.experiences} />
             </Deferred>
             <Deferred>
                 <ExperienceTimeline copy={sections.experience} experiences={props.experiences} />

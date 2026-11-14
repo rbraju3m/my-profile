@@ -29,7 +29,30 @@ export type Appearance = { default: string; picker: boolean; themes: ThemeOption
 /** App\Support\SiteLabels: interface texts, edited in the admin under Labels. */
 export type Labels = {
     common: Record<'theme' | 'theme_system' | 'download_cv' | 'skip' | 'open_menu' | 'close_menu' | 'home' | 'projects', string>;
-    home: Record<'about_eyebrow' | 'education' | 'map_title' | 'all_projects' | 'more_work' | 'case_studies', string>;
+    home: Record<
+        | 'about_eyebrow'
+        | 'education'
+        | 'map_title'
+        | 'all_projects'
+        | 'more_work'
+        | 'case_studies'
+        | 'stat_years'
+        | 'stat_projects'
+        | 'stat_live'
+        | 'stat_technologies'
+        | 'skill_hint'
+        | 'skill_used'
+        | 'skill_none'
+        | 'skill_unlinked'
+        | 'skill_all'
+        | 'skill_close'
+        | 'sections',
+        string
+    >;
+    palette: Record<
+        'open' | 'placeholder' | 'sections' | 'projects' | 'actions' | 'all_projects' | 'download_cv' | 'copy_email' | 'copied' | 'empty' | 'hint',
+        string
+    >;
     contact: Record<
         'email' | 'phone' | 'whatsapp' | 'location' | 'name' | 'form_email' | 'subject' | 'message' | 'required' | 'send' | 'sending' | 'send_another' | 'verify',
         string
@@ -57,7 +80,7 @@ export type Labels = {
         string
     >;
     footer: Record<'navigate' | 'elsewhere' | 'all_projects', string>;
-    diagram: Record<'device' | 'service' | 'queue' | 'storage' | 'user' | 'external' | 'async' | 'sync_legend' | 'async_legend' | 'hint', string>;
+    diagram: Record<'device' | 'service' | 'queue' | 'storage' | 'user' | 'external' | 'async' | 'sync_legend' | 'async_legend' | 'hint' | 'zoom_in' | 'zoom_out' | 'zoom_reset' | 'fullscreen' | 'exit_fullscreen', string>;
 };
 
 export type SharedProps = {
@@ -185,4 +208,18 @@ export type HomeProps = {
     otherProjects: ProjectCard[];
     specializations: Specialization[];
     diagrams: Diagram[];
+    stats: Stat[];
+};
+
+/** PortfolioQuery::stats(): numbers counted from the content. */
+export type Stat = { key: 'years' | 'projects' | 'live' | 'technologies'; value: number; suffix: string };
+
+/** GET /search.json, for the command palette. */
+export type SearchProject = {
+    slug: string;
+    title: string;
+    summary: string;
+    category: string;
+    status: { value: StatusValue; label: string };
+    technologies: string[];
 };

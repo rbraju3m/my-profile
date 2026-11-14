@@ -78,4 +78,56 @@ describe('FlowDiagram', () => {
         expect(legend).toHaveTextContent(/Device.*Service.*Direct call.*Asynchronous/);
         expect(legend).not.toHaveTextContent('People');
     });
+
+    it('zooms in and out in steps between 100% and 250%, and resets', () => {
+        const { container } = render(<FlowDiagram diagram={diagram} />);
+        const svg = () => container.querySelector('svg[role="img"]') as SVGSVGElement;
+        const zoomIn = screen.getByRole('button', { name: 'Zoom in' });
+        const zoomOut = screen.getByRole('button', { name: 'Zoom out' });
+
+        expect(svg().style.width).toBe('100%');
+        expect(zoomOut).toBeDisabled();
+
+        fireEvent.click(zoomIn);
+        fireEvent.click(zoomIn);
+        expect(svg().style.width).toBe('150%');
+        expect(screen.getByRole('button', { name: /Reset zoom/ })).toHaveTextContent('150%');
+
+        for (let i = 0; i < 10; i++) fireEvent.click(zoomIn);
+        expect(svg().style.width).toBe('250%');
+        expect(zoomIn).toBeDisabled();
+
+        fireEvent.click(screen.getByRole('button', { name: /Reset zoom/ }));
+        expect(svg().style.width).toBe('100%');
+    });
+
+    it('zooms with Ctrl + wheel and leaves a plain wheel to scroll the page', () => {
+        const { container } = render(<FlowDiagram diagram={diagram} />);
+        const svg = container.querySelector('svg[role="img"]') as SVGSVGElement;
+        const scroller = svg.parentElement!;
+
+        expect(fireEvent.wheel(scroller, { deltaY: -100 })).toBe(true);
+        expect(svg.style.width).toBe('100%');
+
+        expect(fireEvent.wheel(scroller, { deltaY: -100, ctrlKey: true })).toBe(false); // default prevented
+        expect(parseFloat(svg.style.width)).toBeGreaterThan(100);
+    });
+
+    it('can be zoomed from the keyboard once the diagram area has focus', () => {
+        const { container } = render(<FlowDiagram diagram={diagram} />);
+        const area = screen.getByRole('group', { name: 'Lab analyzer bridge' });
+        const svg = container.querySelector('svg[role="img"]') as SVGSVGElement;
+
+        expect(area).toHaveAttribute('tabindex', '0');
+        fireEvent.keyDown(area, { key: '+' });
+        expect(svg.style.width).toBe('125%');
+        fireEvent.keyDown(area, { key: '0' });
+        expect(svg.style.width).toBe('100%');
+    });
+
+    it('falls back to the default text for any missing label', () => {
+        render(<FlowDiagram diagram={diagram} labels={{ device: 'Gerät' }} />);
+
+        expect(screen.getByRole('button', { name: 'Zoom in' })).toBeInTheDocument();
+    });
 });

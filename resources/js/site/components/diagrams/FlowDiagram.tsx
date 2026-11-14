@@ -1,10 +1,11 @@
-import { ArrowRight, Cpu, Database, Globe, Layers, Server, UserRound, type LucideIcon } from 'lucide-react';
-import { useId, useState, type CSSProperties } from 'react';
+import { ArrowRight, Cpu, Database, Globe, Layers, Maximize2, Minimize2, Server, UserRound, ZoomIn, ZoomOut, type LucideIcon } from 'lucide-react';
+import { useId, useState, type CSSProperties, type ReactNode } from 'react';
 
 import type { Diagram, DiagramEdge, DiagramNode, Labels } from '@/shared/types';
 
 import { cn } from '../../lib/cn';
 import { LABEL_LINE_H, layoutDiagram, NODE_H, NODE_W } from './layout';
+import { MAX_ZOOM, MIN_ZOOM, useZoom } from './useZoom';
 
 type DiagramLabels = Labels['diagram'];
 type NodeType = DiagramNode['type'];
@@ -21,6 +22,11 @@ const DEFAULT_LABELS: DiagramLabels = {
     sync_legend: 'Direct call',
     async_legend: 'Asynchronous',
     hint: 'Hover a component to trace its connections',
+    zoom_in: 'Zoom in',
+    zoom_out: 'Zoom out',
+    zoom_reset: 'Reset zoom',
+    fullscreen: 'Full screen',
+    exit_fullscreen: 'Exit full screen',
 };
 
 const TYPES: Record<NodeType, { tone: string; icon: LucideIcon }> = {
@@ -41,10 +47,13 @@ const tone = (type: NodeType) => ({ '--tone': TYPES[type].tone }) as CSSProperti
  * between them). Wide screens get SVG; narrow screens get the same content as
  * an ordered step list, which is also what screen readers read.
  */
-export function FlowDiagram({ diagram, className, labels = DEFAULT_LABELS }: { diagram: Diagram; className?: string; labels?: DiagramLabels }) {
+export function FlowDiagram({ diagram, className, labels: given }: { diagram: Diagram; className?: string; labels?: Partial<DiagramLabels> }) {
+    // Any label missing (e.g. a page cached before a label was added) falls back to its default.
+    const labels: DiagramLabels = { ...DEFAULT_LABELS, ...given };
     const uid = useId().replace(/:/g, '');
     const layout = layoutDiagram(diagram);
     const [active, setActive] = useState<string | null>(null);
+    const { zoom, zoomIn, zoomOut, reset, full, canFull, toggleFull, scroller, figure, pan, onKeyDown } = useZoom();
     const titleId = `${uid}-title`;
     const descId = `${uid}-desc`;
 
@@ -61,13 +70,62 @@ export function FlowDiagram({ diagram, className, labels = DEFAULT_LABELS }: { d
     const hasAsync = layout.edges.some((e) => e.mode === 'async');
 
     return (
-        <figure className={cn('w-full', className)}>
-            <div className="hidden lg:block">
-                <div className="-mx-2 overflow-x-auto px-2 pb-2">
+        <figure
+            ref={figure}
+            className={cn('w-full', className, full && 'flex flex-col bg-bg p-6 [&>*:first-child]:min-h-0 [&>*:first-child]:flex-1')}
+        >
+            <div className={cn('relative hidden lg:block', full && 'flex min-h-0 flex-col')}>
+                <div className="absolute -top-2 right-0 z-10 flex items-center gap-0.5 rounded-lg border border-border bg-surface/90 p-0.5 shadow-sm backdrop-blur-sm">
+                    <ToolButton label={labels.zoom_out} onClick={zoomOut} disabled={zoom <= MIN_ZOOM}>
+                        <ZoomOut className="size-4" aria-hidden="true" />
+                    </ToolButton>
+                    <button
+                        type="button"
+                        onClick={reset}
+                        title={labels.zoom_reset}
+                        className="min-h-8 min-w-12 rounded-md px-1.5 font-mono text-[11px] text-muted tabular-nums hover:bg-surface-2 hover:text-text"
+                    >
+                        {/* The name starts with the visible text (WCAG 2.5.3): "100%, Reset zoom". */}
+                        {Math.round(zoom * 100)}%<span className="sr-only">, {labels.zoom_reset}</span>
+                    </button>
+                    <ToolButton label={labels.zoom_in} onClick={zoomIn} disabled={zoom >= MAX_ZOOM}>
+                        <ZoomIn className="size-4" aria-hidden="true" />
+                    </ToolButton>
+                    {canFull && (
+                        <>
+                            <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-border" />
+                            <ToolButton label={full ? labels.exit_fullscreen : labels.fullscreen} onClick={toggleFull}>
+                                {full ? <Minimize2 className="size-4" aria-hidden="true" /> : <Maximize2 className="size-4" aria-hidden="true" />}
+                            </ToolButton>
+                        </>
+                    )}
+                </div>
+
+                {/* Focusable so keyboard users can pan (arrow keys) and zoom (+, -, 0). */}
+                <div
+                    ref={scroller}
+                    {...pan}
+                    tabIndex={0}
+                    role="group"
+                    aria-label={diagram.title}
+                    onKeyDown={onKeyDown}
+                    className={cn(
+                        '-mx-2 overflow-auto rounded-lg px-2 pt-10 pb-2 [overscroll-behavior:contain] focus-visible:outline-offset-0',
+                        full && zoom === 1 && 'flex items-center',
+                        zoom > 1 && 'cursor-grab active:cursor-grabbing',
+                        zoom > 1 && !full && 'max-h-[75vh]',
+                        full && 'min-h-0 flex-1',
+                    )}
+                >
                     <svg
                         viewBox={`${layout.x} ${layout.y} ${layout.width} ${layout.height}`}
-                        className="h-auto w-full"
-                        style={{ minWidth: Math.round(layout.width * 0.75) }}
+                        className={cn('max-w-none', !full && 'h-auto')}
+                        // In full screen, 100% fits the whole screen (the SVG keeps its aspect ratio inside the box).
+                        style={
+                            full
+                                ? { width: `${zoom * 100}%`, height: `${zoom * 100}%` }
+                                : { width: `${zoom * 100}%`, minWidth: Math.round(layout.width * 0.75 * zoom) }
+                        }
                         role="img"
                         aria-labelledby={`${titleId} ${descId}`}
                         onMouseLeave={() => setActive(null)}
@@ -203,6 +261,21 @@ export function FlowDiagram({ diagram, className, labels = DEFAULT_LABELS }: { d
 
             {diagram.description && <figcaption className="mt-4 max-w-3xl text-sm text-pretty text-muted">{diagram.description}</figcaption>}
         </figure>
+    );
+}
+
+function ToolButton({ label, onClick, disabled, children }: { label: string; onClick: () => void; disabled?: boolean; children: ReactNode }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={label}
+            title={label}
+            className="grid size-8 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-text disabled:pointer-events-none disabled:opacity-40"
+        >
+            {children}
+        </button>
     );
 }
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Project;
+use App\Models\Technology;
 use Database\Seeders\PortfolioSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -89,4 +90,31 @@ it('passes filters from the query string so a filtered link renders the same on 
             ->where('initial.query', 'ultrasound')
             ->where('initial.category', null)
             ->etc());
+});
+
+it('counts the hero numbers from the content itself', function () {
+    $published = Project::query()->published()->count();
+    $live = Project::query()->published()->where('status', 'live')->count();
+
+    $this->get('/')->assertInertia(fn (Assert $page) => $page
+        ->where('stats', fn ($stats) => collect($stats)->firstWhere('key', 'projects')['value'] === $published
+            && (collect($stats)->firstWhere('key', 'live')['value'] ?? 0) === $live
+            && collect($stats)->firstWhere('key', 'years')['value'] > 0
+            && collect($stats)->every(fn ($s) => $s['value'] > 0))
+        // The technologies number is exactly what the skill cards show.
+        ->where('stats', fn ($stats) => collect($stats)->firstWhere('key', 'technologies')['value']
+            === Technology::query()->where('show_in_skills', true)->whereHas('category')->count())
+        ->etc());
+});
+
+it('serves the command palette index with published projects only', function () {
+    Project::query()->where('slug', 'orbito-erp')->update(['published_at' => null]);
+
+    $response = $this->getJson('/search.json')->assertOk()
+        ->assertJsonStructure(['projects' => [['slug', 'title', 'summary', 'category', 'status' => ['value', 'label'], 'technologies']]]);
+
+    expect(collect($response->json('projects'))->pluck('slug'))
+        ->not->toContain('orbito-erp')
+        ->toHaveCount(Project::query()->published()->count());
+    expect($response->headers->get('Cache-Control'))->toContain('private')->not->toContain('public');
 });

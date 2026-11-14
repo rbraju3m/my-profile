@@ -2,25 +2,25 @@ import { usePage } from '@inertiajs/react';
 import { ArrowRight, Download, MapPin } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
-import type { HeroContent, SharedProps } from '@/shared/types';
+import type { HeroContent, SharedProps, Stat } from '@/shared/types';
 
 import { Button } from '../ui/Button';
 import { Container } from '../ui/Container';
 import { SystemMap } from './SystemMap';
 
-export function Hero({ hero }: { hero: HeroContent }) {
-    const { site } = usePage<SharedProps>().props;
+export function Hero({ hero, stats = [] }: { hero: HeroContent; stats?: Stat[] }) {
+    const { site, labels } = usePage<SharedProps>().props;
 
     return (
-        <section aria-labelledby="hero-heading" data-spotlight="" className="relative overflow-hidden [--spot-size:640px]">
+        <section aria-labelledby="hero-heading" data-spotlight="" data-parallax="" className="relative overflow-hidden [--spot-size:640px]">
             <div aria-hidden="true" className="bg-grid absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
             <div
                 aria-hidden="true"
-                className="hero-drift absolute -top-40 left-1/2 h-[480px] w-[900px] -translate-x-1/2 rounded-full bg-accent-glow blur-3xl"
+                className="hero-drift parallax-far absolute -top-40 left-1/2 h-[480px] w-[900px] -translate-x-1/2 rounded-full bg-accent-glow blur-3xl"
             />
             <div
                 aria-hidden="true"
-                className="hero-drift hero-drift-alt absolute top-1/2 -right-40 hidden h-[360px] w-[520px] rounded-full bg-accent-glow blur-3xl lg:block"
+                className="hero-drift hero-drift-alt parallax-near absolute top-1/2 -right-40 hidden h-[360px] w-[520px] rounded-full bg-accent-glow blur-3xl lg:block"
             />
 
             {/* min-w-0 on both columns: otherwise the system map's row of steps widens the column past a phone screen. */}
@@ -69,12 +69,12 @@ export function Hero({ hero }: { hero: HeroContent }) {
 
                     {/* The headline and subheading are not animated: one of them is the LCP element. */}
                     <div className="hero-enter mt-8 flex flex-wrap gap-3" style={step(2)}>
-                        <Button href={hero.primary_cta.href}>
+                        <Button href={hero.primary_cta.href} magnetic>
                             {hero.primary_cta.label}
                             <ArrowRight className="size-4 transition-transform duration-300 group-hover/btn:translate-x-1" aria-hidden="true" />
                         </Button>
                         {site.has_cv && (
-                            <Button href={hero.secondary_cta.href} variant="secondary" download>
+                            <Button href={hero.secondary_cta.href} variant="secondary" download magnetic>
                                 <Download className="size-4" aria-hidden="true" />
                                 {hero.secondary_cta.label}
                             </Button>
@@ -103,6 +103,34 @@ export function Hero({ hero }: { hero: HeroContent }) {
                     <SystemMap flows={hero.flows} />
                 </div>
             </Container>
+
+            {stats.length > 0 && (
+                <Container className="relative pb-16 lg:pb-20">
+                    <dl className="hero-enter grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4" style={step(4)}>
+                        {stats.map((stat, i) => (
+                            <div
+                                key={stat.key}
+                                className="flex flex-col-reverse justify-end gap-1 bg-surface p-5 odd:last:col-span-2 sm:p-6 sm:odd:last:col-span-1"
+                            >
+                                <dt className="text-xs text-pretty text-muted sm:text-sm">{labels.home[`stat_${stat.key}`]}</dt>
+                                <dd className="font-mono text-3xl font-semibold tracking-tight text-text tabular-nums sm:text-4xl">
+                                    <span className="sr-only">
+                                        {stat.value}
+                                        {stat.suffix}
+                                    </span>
+                                    {/* Counts up from 0 in CSS (.count-up in site.css); the number above is what's read out. */}
+                                    <span aria-hidden="true" className="count-up" style={{ '--to': stat.value, '--i': i } as CSSProperties} />
+                                    {stat.suffix && (
+                                        <span aria-hidden="true" className="text-accent">
+                                            {stat.suffix}
+                                        </span>
+                                    )}
+                                </dd>
+                            </div>
+                        ))}
+                    </dl>
+                </Container>
+            )}
         </section>
     );
 }

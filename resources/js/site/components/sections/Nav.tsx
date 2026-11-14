@@ -1,19 +1,25 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Menu, Search, X } from 'lucide-react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import type { SharedProps } from '@/shared/types';
 
 import { cn } from '../../lib/cn';
-import { useActiveSection } from '../../lib/useActiveSection';
+import { openPalette } from '../palette/PaletteHost';
 import { Container } from '../ui/Container';
 import { ThemeGrid, ThemePicker } from './ThemePicker';
 
-export function Nav({ onHome }: { onHome: boolean }) {
+export function Nav({ onHome, activeSection = null }: { onHome: boolean; activeSection?: string | null }) {
     const { site, nav, labels } = usePage<SharedProps>().props;
     const [open, setOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
-    const active = useActiveSection(onHome ? nav.map((item) => item.href.replace('#', '')) : []);
+    // The server assumes a Mac; the browser corrects it after hydration.
+    const shortcut = useSyncExternalStore(
+        noop,
+        () => (/Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘K' : 'Ctrl K'),
+        () => '⌘K',
+    );
+    const active = activeSection;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 8);
@@ -91,6 +97,21 @@ export function Nav({ onHome }: { onHome: boolean }) {
                 </nav>
 
                 <div className="flex items-center gap-1">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setOpen(false);
+                            openPalette();
+                        }}
+                        aria-keyshortcuts="Control+K Meta+K"
+                        className="group flex size-11 items-center justify-center gap-2 rounded-lg text-muted hover:bg-surface-2 hover:text-text lg:w-auto lg:border lg:border-border lg:px-3 lg:hover:border-border-strong"
+                    >
+                        <Search className="size-[18px] lg:size-4" aria-hidden="true" />
+                        <span className="sr-only lg:not-sr-only lg:text-sm">{labels.palette.open}</span>
+                        <kbd aria-hidden="true" className="hidden rounded border border-border bg-surface-2 px-1.5 font-mono text-[10px] text-muted lg:inline">
+                            {shortcut}
+                        </kbd>
+                    </button>
                     <ThemePicker />
                     <button
                         type="button"
@@ -143,6 +164,8 @@ export function Nav({ onHome }: { onHome: boolean }) {
         </header>
     );
 }
+
+const noop = () => () => {};
 
 /** "Md. Rashedul Bari Raju" → "RR": first and last name, skipping abbreviations like "Md.". */
 export function initials(name: string): string {

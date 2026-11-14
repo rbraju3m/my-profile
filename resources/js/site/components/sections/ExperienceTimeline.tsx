@@ -35,12 +35,15 @@ export function ExperienceTimeline({ copy, experiences }: { copy: SectionCopy; e
                                     {/* The line fills with the accent colour as it scrolls through the viewport (site.css). */}
                                     <span aria-hidden="true" className="timeline-fill absolute top-0 -left-px h-full w-px bg-accent" />
                                     {job.phases.map((phase, p) => (
-                                        <section key={phase.title} aria-label={phase.title} className="relative">
+                                        <section key={phase.title} aria-label={phase.title} className="timeline-phase relative">
                                             <span
                                                 aria-hidden="true"
                                                 style={{ '--i': p } as CSSProperties}
-                                                className="timeline-dot absolute top-1.5 -left-[29px] size-2.5 rounded-full border-2 border-accent bg-bg sm:-left-[37px]"
-                                            />
+                                                className="timeline-dot absolute top-1.5 -left-[29px] grid size-2.5 place-items-center rounded-full border-2 border-accent bg-bg sm:-left-[37px]"
+                                            >
+                                                {/* Fills in as the phase reaches the middle of the screen (site.css). */}
+                                                <span className="timeline-dot-fill size-full rounded-full" />
+                                            </span>
                                             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                                                 <h4 className="font-semibold">{phase.title}</h4>
                                                 {phase.period && <span className="font-mono text-xs text-muted">{phase.period}</span>}

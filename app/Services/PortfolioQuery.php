@@ -53,11 +53,13 @@ final class PortfolioQuery
             ->with(['technologies', 'media'])
             ->get();
 
+        $skills = $this->skills();
+
         return [
             'hero' => $this->hero($projects->pluck('slug')->all()),
             'about' => $this->settings->get('about'),
             'sections' => $this->settings->get('sections'),
-            'skills' => $this->skills(),
+            'skills' => $skills,
             'experiences' => $this->experiences(),
             'education' => Education::query()->orderBy('sort_order')->get()
                 ->map(fn (Education $e): array => $e->only(['id', 'degree', 'institution', 'detail', 'started_year', 'ended_year']))
@@ -66,7 +68,49 @@ final class PortfolioQuery
             'otherProjects' => $projects->where('is_featured', false)->values()->map($this->card(...))->all(),
             'specializations' => $this->specializations(),
             'diagrams' => Diagram::query()->orderBy('sort_order')->get()->map($this->diagram(...))->all(),
+            'stats' => $this->stats($projects, $skills),
         ];
+    }
+
+    /**
+     * Headline numbers for the hero, counted from the content itself so they
+     * can never drift from what the site shows.
+     *
+     * @param  Collection<int, Project>  $projects  published projects
+     * @param  list<array<string, mixed>>  $skills  the skill cards, as shown
+     * @return list<array{key: string, value: int, suffix: string}>
+     */
+    private function stats(Collection $projects, array $skills): array
+    {
+        $since = Experience::query()->min('started_at');
+        $years = $since ? (int) floor(now()->diffInYears($since, true)) : 0;
+
+        $stats = [
+            ['key' => 'years', 'value' => $years, 'suffix' => '+'],
+            ['key' => 'projects', 'value' => $projects->count(), 'suffix' => ''],
+            ['key' => 'live', 'value' => $projects->where('status', ProjectStatus::Live)->count(), 'suffix' => ''],
+            ['key' => 'technologies', 'value' => collect($skills)->pluck('technologies')->flatten(1)->pluck('slug')->unique()->count(), 'suffix' => ''],
+        ];
+
+        return array_values(array_filter($stats, fn (array $s): bool => $s['value'] > 0));
+    }
+
+    /**
+     * What the command palette searches: published projects only, small.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function searchIndex(): array
+    {
+        return Project::query()->published()->ordered()->with('technologies')->get()
+            ->map(fn (Project $p): array => [
+                'slug' => $p->slug,
+                'title' => $p->title,
+                'summary' => $p->summary,
+                'category' => $p->category->label(),
+                'status' => ['value' => $p->status->value, 'label' => $p->status->label()],
+                'technologies' => $p->technologies->pluck('name')->all(),
+            ])->values()->all();
     }
 
     /** @return array<string, mixed> */

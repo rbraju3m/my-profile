@@ -6,6 +6,7 @@ use App\Http\Controllers\Site\ContactController;
 use App\Http\Controllers\Site\CvController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\ProjectController;
+use App\Http\Controllers\Site\SearchIndexController;
 use App\Http\Controllers\Site\SeoFilesController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,4 +20,5 @@ Route::middleware('page-cache')->group(function () {
 });
 
 Route::get('/cv', CvController::class)->name('cv');
+Route::get('/search.json', SearchIndexController::class)->name('search-index');
 Route::post('/contact', ContactController::class)->middleware('throttle:contact')->name('contact');

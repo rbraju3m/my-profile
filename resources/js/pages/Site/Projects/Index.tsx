@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { flushSync } from 'react-dom';
 
 import type { Option, ProjectCard as Card, SharedProps, StatusValue } from '@/shared/types';
 
@@ -27,7 +28,24 @@ const EMPTY: ProjectFilter = { query: '', category: null, status: null, tech: nu
 export default function ProjectsIndex({ projects, filters, meta, initial }: Props) {
     const { labels } = usePage<SharedProps>().props;
     const t = labels.projects;
-    const [filter, setFilter] = useState<ProjectFilter>(initial);
+    const [filter, setFilterNow] = useState<ProjectFilter>(initial);
+
+    // Cards glide to their new places when the filters change (View Transitions;
+    // a plain update where unsupported or with reduced motion).
+    const setFilter = (next: ProjectFilter | ((f: ProjectFilter) => ProjectFilter)) => {
+        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!document.startViewTransition || reduced) {
+            setFilterNow(next);
+            return;
+        }
+        // Cards get their transition names only while this runs (.filtering in site.css),
+        // so other view transitions, like the theme switch, treat the page as one image.
+        const root = document.documentElement;
+        root.classList.add('filtering');
+        document
+            .startViewTransition(() => flushSync(() => setFilterNow(next)))
+            .finished.finally(() => root.classList.remove('filtering'));
+    };
     const [showAllTech, setShowAllTech] = useState(false);
 
     // Mirror the filters into the URL so a filtered view can be shared.
@@ -65,7 +83,7 @@ export default function ProjectsIndex({ projects, filters, meta, initial }: Prop
                             id="project-search"
                             type="search"
                             value={filter.query}
-                            onChange={(e) => set({ query: e.target.value })}
+                            onChange={(e) => setFilterNow((f) => ({ ...f, query: e.target.value }))}
                             placeholder={t.search_placeholder}
                             className="block min-h-11 w-full rounded-lg border border-border bg-bg pr-3 pl-9 text-sm placeholder:text-muted focus:border-accent focus:outline-none"
                         />
@@ -113,7 +131,7 @@ export default function ProjectsIndex({ projects, filters, meta, initial }: Prop
                 {results.length > 0 ? (
                     <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {results.map((project) => (
-                            <li key={project.slug}>
+                            <li key={project.slug} data-vt="" style={{ '--vt': `project-${project.slug}` } as CSSProperties}>
                                 <ProjectCard project={project} featured={project.is_featured} headingLevel="h2" />
                             </li>
                         ))}
